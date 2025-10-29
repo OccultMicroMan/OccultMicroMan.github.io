@@ -142,7 +142,7 @@ function renderAdminTickets(){
 function initGlobal(){
   $$('.text-size').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      const cur=parseFloat(get(K.font)||'20');
+      const cur=parseFloat(get(K.font)||'18');
       const next=btn.dataset.size==='up'?Math.min(cur+1,24):Math.max(cur-1,14);
       set(K.font,String(next));
       document.documentElement.style.setProperty('--base-font', `${next}px`);
@@ -152,29 +152,8 @@ function initGlobal(){
   if (savedFont) document.documentElement.style.setProperty('--base-font', `${savedFont}px`);
 
   const dark=$('#dark-toggle'), hc=$('#contrast-toggle');
-  if (dark) {
-    dark.addEventListener('click', ()=>{ 
-      const on=document.body.classList.toggle('dark'); 
-      dark.setAttribute('aria-pressed', on ? 'true' : 'false'); 
-      set(K.dark, on ? '1' : '0');
-    });
-    if (get(K.dark) === '1') {
-      document.body.classList.add('dark');
-      dark.setAttribute('aria-pressed', 'true');
-    }
-  }
-  
-  if (hc) {
-    hc.addEventListener('click', ()=>{ 
-      const on=document.body.classList.toggle('contrast'); 
-      hc.setAttribute('aria-pressed', on ? 'true' : 'false'); 
-      set(K.contrast, on ? '1' : '0');
-    });
-    if (get(K.contrast) === '1') {
-      document.body.classList.add('contrast');
-      hc.setAttribute('aria-pressed', 'true');
-    }
-  }
+  dark?.addEventListener('click', ()=>{ const on=document.body.classList.toggle('dark'); dark.setAttribute('aria-pressed', on); });
+  hc?.addEventListener('click',  ()=>{ const on=document.body.classList.toggle('contrast'); hc.setAttribute('aria-pressed', on); });
 
   // universal logout buttons
   $$('[data-logout]').forEach(b=> b.addEventListener('click', ()=>{
@@ -196,15 +175,17 @@ function setStatus(msg){
   const s=$('#login-status'); 
   if (s){ 
     s.textContent=msg||''; 
-    s.style.display = msg ? 'block' : 'none'; 
+    if (msg) {
+      s.style.opacity = '1';
+    } else {
+      s.style.opacity = '0';
+    }
   }
 }
 
 /* ---- Admin ---- */
 function initAdminLogin(){
-  const form = $('#admin-login-form'); 
-  if (!form) return;
-  
+  const form = $('#admin-login-form'); if (!form) return;
   const go = (e)=>{
     e.preventDefault();
     const {user, pass, code} = readLoginFields('ad');
@@ -222,8 +203,9 @@ function initAdminLogin(){
   form.addEventListener('submit', go);
 }
 
-/* ---- Caregiver ---- */
+/* ---- Caregiver (your page title/login file is login.html) ---- */
 function initCaregiverLogin(){
+  // Bind either #cg-login-form or a generic #login-form on login.html
   const form = $('#cg-login-form') || $('#login-form');
   if (!form) return;
 
@@ -238,6 +220,7 @@ function initCaregiverLogin(){
     if (cg){
       setStatus('');
       set(K.currentUserId, cg.id);
+      // keep last selected patient if any
       location.href='caregiver.html';
       return;
     }
@@ -248,8 +231,7 @@ function initCaregiverLogin(){
 
 /* ---- Patient ---- */
 function initPatientLogin(){
-  const form = $('#pt-login-form'); 
-  if (!form) return;
+  const form = $('#pt-login-form'); if (!form) return;
 
   const go = (e)=>{
     e.preventDefault();
@@ -283,7 +265,7 @@ function renderRoleSummary(){
 
   const chip = (label, value) =>
     `<span class="pill" style="font-size:.85rem;">${label}</span>
-     <span class="pill" style="background:var(--panel);border:1px solid var(--line);">${value}</span>`;
+     <span class="pill" style="background:var(--surface);border:1px solid var(--border);">${value}</span>`;
 
   const parts = [];
   if (admins[0]) parts.push(chip('Site Admin', admins[0].username||'admin'));
@@ -299,6 +281,7 @@ function initAdmin(){
   const list=$('#user-list');
   renderUserList(); renderRoleSummary();
 
+  // >>> YOUR REQUESTED SUBMIT HANDLER (added; replaces previous one) <<<
   form.addEventListener('submit',(e)=>{
     e.preventDefault();
     const role=$('#role').value, fullName=$('#fullName').value.trim(),
@@ -578,10 +561,10 @@ function fmtWhen(iso){ const d=iso?new Date(iso):null; return d&&!Number.isNaN(d
 function escapeHTML(s){ return (s||'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c])); }
 
 document.addEventListener('DOMContentLoaded', ()=>{
-  seedDemo();
+  seedDemo();       // ensure demo users exist (never wipes)
   initGlobal();
 
-  // Bind logins
+  // Bind logins (robust to filename/ID variations)
   initAdminLogin();
   initCaregiverLogin();
   initPatientLogin();
