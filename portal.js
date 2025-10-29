@@ -161,26 +161,42 @@ function initGlobal(){
     location.href='index.html';
   }));
 
-  // inject top-right brand on every page
-  injectGlobalBrand();
+  // ensure the brand exists in the header (top-left) on every page
+  ensureHeaderBrand();
 }
 
-/* Inject the fixed top-right brand icon + label */
-function injectGlobalBrand(){
-  if (document.querySelector('.global-brand')) return; // already added
-  const brand = document.createElement('a');
-  brand.className = 'global-brand';
-  brand.href = 'index.html';
-  brand.setAttribute('aria-label', 'MyHealth Portal – Home');
+/* Ensure the header brand (icon + text) is present top-left on every page */
+function ensureHeaderBrand(){
+  // remove any previously injected fixed brand (if it existed)
+  document.querySelector('.global-brand')?.remove();
+
+  // find or create a header.appbar
+  let header = document.querySelector('.appbar');
+  if (!header){
+    header = document.createElement('header');
+    header.className = 'appbar';
+    document.body.insertBefore(header, document.body.firstChild);
+  }
+
+  // find or create the brand anchor
+  let brand = header.querySelector('.brand');
+  if (!brand){
+    brand = document.createElement('a');
+    brand.className = 'brand';
+    brand.href = 'index.html';
+    brand.setAttribute('aria-label','MyHealth Portal – Home');
+    header.prepend(brand);
+  }
+
+  // standardize the SVG icon + label
   brand.innerHTML = `
-    <svg class="global-brand__icon" viewBox="0 0 48 48" aria-hidden="true">
+    <svg class="brand__mark" viewBox="0 0 48 48" aria-hidden="true" style="border-radius:8px;">
       <rect x="4" y="4" width="40" height="40" rx="10" fill="#1f8fff"/>
       <rect x="22" y="12" width="4" height="24" rx="2" fill="#ffffff"/>
       <rect x="12" y="22" width="24" height="4" rx="2" fill="#ffffff"/>
     </svg>
-    <span class="global-brand__text">MyHealth Portal</span>
+    <span class="brand__text">MyHealth Portal</span>
   `;
-  document.body.appendChild(brand);
 }
 
 /* ===========================
@@ -294,7 +310,7 @@ function initAdmin(){
   const list=$('#user-list');
   renderUserList(); renderRoleSummary();
 
-  // >>> YOUR REQUESTED SUBMIT HANDLER (added; replaces previous one) <<<
+  // >>> submit handler
   form.addEventListener('submit',(e)=>{
     e.preventDefault();
     const role=$('#role').value, fullName=$('#fullName').value.trim(),
