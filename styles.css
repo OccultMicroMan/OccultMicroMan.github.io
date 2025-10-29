@@ -111,9 +111,9 @@ body.dark .btn--top[aria-pressed="true"]{ background:#0ea5a5; border-color:#0ea5
   align-items:center; padding: clamp(.75rem, 2vw, 1rem) clamp(12px, 3vw, 24px);
   background:var(--panel); border-bottom:1px solid var(--line);
 }
-.brand{ display:flex; align-items:center; gap:.6rem; font-weight:800; }
-.brand__mark{ display:inline-grid; place-items:center; width:32px; height:32px; border-radius:8px; background:var(--brand); color:#fff; font-size:18px; }
-.brand__text{ color:var(--ink); letter-spacing:.3px; }
+
+/* HIDE any left-side header brand so only the top-right button appears */
+.appbar .brand { display: none !important; }
 
 .usernav{ display:flex; gap:.6rem; align-items:center; justify-content:flex-end; flex-wrap:wrap; }
 
@@ -252,4 +252,22 @@ h1{ margin:.1rem 0; font-size: var(--step-2); }
   .card__header .card__title { margin-right:0; }
 }
 
-/* NOTE: removed the fixed .global-brand styles, since we now use the header brand */
+/* ===== Fixed top-right brand ===== */
+.global-brand{
+  position:fixed;
+  top:12px;
+  right:12px;
+  display:inline-flex;
+  gap:.55rem;
+  align-items:center;
+  z-index:9999;
+  text-decoration:none;
+  font-weight:800;
+  color:var(--ink);
+  user-select:none;
+}
+.global-brand__icon{ width:28px; height:28px; border-radius:8px; flex:0 0 28px; }
+.global-brand__text{ line-height:1; }
+@media (max-width:480px){
+  .global-brand__text{ display:none; } /* icon-only on tiny screens */
+}

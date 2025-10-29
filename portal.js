@@ -161,42 +161,26 @@ function initGlobal(){
     location.href='index.html';
   }));
 
-  // ensure the brand exists in the header (top-left) on every page
-  ensureHeaderBrand();
+  // Show brand ONLY as fixed button on the top-right (no left header brand)
+  injectGlobalBrand();
 }
 
-/* Ensure the header brand (icon + text) is present top-left on every page */
-function ensureHeaderBrand(){
-  // remove any previously injected fixed brand (if it existed)
-  document.querySelector('.global-brand')?.remove();
-
-  // find or create a header.appbar
-  let header = document.querySelector('.appbar');
-  if (!header){
-    header = document.createElement('header');
-    header.className = 'appbar';
-    document.body.insertBefore(header, document.body.firstChild);
-  }
-
-  // find or create the brand anchor
-  let brand = header.querySelector('.brand');
-  if (!brand){
-    brand = document.createElement('a');
-    brand.className = 'brand';
-    brand.href = 'index.html';
-    brand.setAttribute('aria-label','MyHealth Portal – Home');
-    header.prepend(brand);
-  }
-
-  // standardize the SVG icon + label
+/* Fixed top-right brand (icon + label) */
+function injectGlobalBrand(){
+  if (document.querySelector('.global-brand')) return;
+  const brand = document.createElement('a');
+  brand.className = 'global-brand';
+  brand.href = 'index.html';
+  brand.setAttribute('aria-label', 'MyHealth Portal – Home');
   brand.innerHTML = `
-    <svg class="brand__mark" viewBox="0 0 48 48" aria-hidden="true" style="border-radius:8px;">
+    <svg class="global-brand__icon" viewBox="0 0 48 48" aria-hidden="true">
       <rect x="4" y="4" width="40" height="40" rx="10" fill="#1f8fff"/>
       <rect x="22" y="12" width="4" height="24" rx="2" fill="#ffffff"/>
       <rect x="12" y="22" width="24" height="4" rx="2" fill="#ffffff"/>
     </svg>
-    <span class="brand__text">MyHealth Portal</span>
+    <span class="global-brand__text">MyHealth Portal</span>
   `;
+  document.body.appendChild(brand);
 }
 
 /* ===========================
@@ -232,9 +216,8 @@ function initAdminLogin(){
   form.addEventListener('submit', go);
 }
 
-/* ---- Caregiver (your page title/login file is login.html) ---- */
+/* ---- Caregiver ---- */
 function initCaregiverLogin(){
-  // Bind either #cg-login-form or a generic #login-form on login.html
   const form = $('#cg-login-form') || $('#login-form');
   if (!form) return;
 
@@ -249,7 +232,6 @@ function initCaregiverLogin(){
     if (cg){
       setStatus('');
       set(K.currentUserId, cg.id);
-      // keep last selected patient if any
       location.href='caregiver.html';
       return;
     }
@@ -310,7 +292,6 @@ function initAdmin(){
   const list=$('#user-list');
   renderUserList(); renderRoleSummary();
 
-  // >>> submit handler
   form.addEventListener('submit',(e)=>{
     e.preventDefault();
     const role=$('#role').value, fullName=$('#fullName').value.trim(),
@@ -590,10 +571,10 @@ function fmtWhen(iso){ const d=iso?new Date(iso):null; return d&&!Number.isNaN(d
 function escapeHTML(s){ return (s||'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c])); }
 
 document.addEventListener('DOMContentLoaded', ()=>{
-  seedDemo();       // ensure demo users exist (never wipes)
+  seedDemo();
   initGlobal();
 
-  // Bind logins (robust to filename/ID variations)
+  // Bind logins
   initAdminLogin();
   initCaregiverLogin();
   initPatientLogin();
