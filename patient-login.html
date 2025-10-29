@@ -12,11 +12,14 @@
 
   <header class="appbar">
     <a class="brand" href="index.html" aria-label="Go to Home">
-      <span class="brand__mark" aria-hidden="true">✨</span><span class="brand__text">MyHealth Portal</span>
+      <span class="brand__mark" aria-hidden="true">
+        <img src="https://i.imgur.com/YmC5bsZ.png" alt="MyHealth Logo" />
+      </span>
+      <span class="brand__text">MyHealth Portal</span>
     </a>
     <nav class="usernav">
       <button class="btn btn--top text-size" data-size="up">A+</button>
-      <button class="btn btn--top text-size" data-size="down">A&minus;</button>
+      <button class="btn btn--top text-size" data-size="down">A−</button>
       <button class="btn btn--top" id="dark-toggle" aria-pressed="false">Dark</button>
       <button class="btn btn--top" id="contrast-toggle" aria-pressed="false">Contrast</button>
     </nav>
@@ -44,7 +47,7 @@
           <div class="muted">&mdash; OR &mdash;</div>
 
           <label>Patient Access Code
-            <input id="pt-code" type="text" inputmode="numeric" />
+            <input id="pt-code" type="text" inputmode="numeric" placeholder="Enter 4-digit code" />
           </label>
 
           <div style="display:flex;gap:.5rem;align-items:center;">
