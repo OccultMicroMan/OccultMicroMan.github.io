@@ -161,26 +161,41 @@ function initGlobal(){
     location.href='index.html';
   }));
 
-  // Show brand ONLY as fixed button on the top-right (no left header brand)
-  injectGlobalBrand();
+  // Brand: top-left in header (and ensure any fixed right brand is removed)
+  ensureHeaderBrand();
 }
 
-/* Fixed top-right brand (icon + label) */
-function injectGlobalBrand(){
-  if (document.querySelector('.global-brand')) return;
-  const brand = document.createElement('a');
-  brand.className = 'global-brand';
-  brand.href = 'index.html';
-  brand.setAttribute('aria-label', 'MyHealth Portal – Home');
+/* Ensure a left-side header brand; remove any right-side fixed brand */
+function ensureHeaderBrand(){
+  document.querySelector('.global-brand')?.remove(); // clean any previous right fixed brand
+
+  // ensure there is a header.appbar
+  let header = document.querySelector('.appbar');
+  if (!header){
+    header = document.createElement('header');
+    header.className = 'appbar';
+    document.body.insertBefore(header, document.body.firstChild);
+  }
+
+  // ensure left brand anchor exists
+  let brand = header.querySelector('.brand');
+  if (!brand){
+    brand = document.createElement('a');
+    brand.className = 'brand';
+    brand.href = 'index.html';
+    brand.setAttribute('aria-label','MyHealth Portal – Home');
+    header.prepend(brand);
+  }
+
+  // icon + text
   brand.innerHTML = `
-    <svg class="global-brand__icon" viewBox="0 0 48 48" aria-hidden="true">
+    <svg class="brand__mark" viewBox="0 0 48 48" aria-hidden="true" style="border-radius:8px;">
       <rect x="4" y="4" width="40" height="40" rx="10" fill="#1f8fff"/>
       <rect x="22" y="12" width="4" height="24" rx="2" fill="#ffffff"/>
       <rect x="12" y="22" width="24" height="4" rx="2" fill="#ffffff"/>
     </svg>
-    <span class="global-brand__text">MyHealth Portal</span>
+    <span class="brand__text">MyHealth Portal</span>
   `;
-  document.body.appendChild(brand);
 }
 
 /* ===========================
@@ -269,19 +284,19 @@ function initPatientLogin(){
    =========================== */
 function renderRoleSummary(){
   const wrap = $('#role-summary'); if (!wrap) return;
-  const users = loadUsers();
-  const admins = users.filter(u=>u.role==='admin');
-  const cgs    = users.filter(u=>u.role==='caregiver');
-  const pts    = users.filter(u=>u.role==='patient');
+  const users  = loadUsers();
+  const admins = users.filter(u => u.role === 'admin');
+  const cgs    = users.filter(u => u.role === 'caregiver');
+  const pts    = users.filter(u => u.role === 'patient');
 
   const chip = (label, value) =>
     `<span class="pill" style="font-size:.85rem;">${label}</span>
      <span class="pill" style="background:var(--surface);border:1px solid var(--border);">${value}</span>`;
 
   const parts = [];
-  if (admins[0]) parts.push(chip('Site Admin', admins[0].username||'admin'));
-  if (cgs[0])    parts.push(chip('Caregiver', cgs[0].username||'caregiver'));
-  if (pts[0])    parts.push(chip('Patient', pts[0].fullName||'Patient'));
+  if (admins[0]) parts.push(chip('Site Admin', admins[0].username || 'admin'));
+  if (cgs[0])    parts.push(chip('Caregiver', cgs[0].username || 'caregiver'));
+  if (pts[0])    parts.push(chip('Patient', pts[0].fullName || 'Patient'));
   wrap.innerHTML = parts.join('');
 }
 
