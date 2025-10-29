@@ -137,12 +137,12 @@ function renderAdminTickets(){
 }
 
 /* ===========================
-   Global UI toggles + brand
+   Global UI toggles
    =========================== */
 function initGlobal(){
   $$('.text-size').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      const cur=parseFloat(get(K.font)||'18');
+      const cur=parseFloat(get(K.font)||'20');
       const next=btn.dataset.size==='up'?Math.min(cur+1,24):Math.max(cur-1,14);
       set(K.font,String(next));
       document.documentElement.style.setProperty('--base-font', `${next}px`);
@@ -152,70 +152,35 @@ function initGlobal(){
   if (savedFont) document.documentElement.style.setProperty('--base-font', `${savedFont}px`);
 
   const dark=$('#dark-toggle'), hc=$('#contrast-toggle');
-  dark?.addEventListener('click', ()=>{ const on=document.body.classList.toggle('dark'); dark.setAttribute('aria-pressed', on); });
-  hc?.addEventListener('click',  ()=>{ const on=document.body.classList.toggle('contrast'); hc.setAttribute('aria-pressed', on); });
+  if (dark) {
+    dark.addEventListener('click', ()=>{ 
+      const on=document.body.classList.toggle('dark'); 
+      dark.setAttribute('aria-pressed', on ? 'true' : 'false'); 
+      set(K.dark, on ? '1' : '0');
+    });
+    if (get(K.dark) === '1') {
+      document.body.classList.add('dark');
+      dark.setAttribute('aria-pressed', 'true');
+    }
+  }
+  
+  if (hc) {
+    hc.addEventListener('click', ()=>{ 
+      const on=document.body.classList.toggle('contrast'); 
+      hc.setAttribute('aria-pressed', on ? 'true' : 'false'); 
+      set(K.contrast, on ? '1' : '0');
+    });
+    if (get(K.contrast) === '1') {
+      document.body.classList.add('contrast');
+      hc.setAttribute('aria-pressed', 'true');
+    }
+  }
 
   // universal logout buttons
   $$('[data-logout]').forEach(b=> b.addEventListener('click', ()=>{
     del(K.currentUserId); del(K.currentPatientId); del(K.adminLogged);
     location.href='index.html';
   }));
-
-  // Brand: top-left in header
-  ensureHeaderBrand();
-}
-
-/* Ensure a left-side header brand; move controls to right */
-function ensureHeaderBrand(){
-  // Remove any old right-fixed brand if it exists
-  document.querySelector('.global-brand')?.remove();
-
-  // Ensure header exists
-  let header = document.querySelector('header.appbar');
-  if (!header) {
-    header = document.createElement('header');
-    header.className = 'appbar';
-    document.body.insertBefore(header, document.body.firstChild);
-  }
-
-  // Ensure brand (left side) exists
-  let brand = header.querySelector('.brand');
-  if (!brand) {
-    brand = document.createElement('a');
-    brand.className = 'brand';
-    brand.href = 'index.html';
-    brand.setAttribute('aria-label', 'MyHealth Portal – Home');
-    header.prepend(brand);
-  }
-
-  // Inject icon + text
-  brand.innerHTML = `
-    <svg class="brand__mark" viewBox="0 0 48 48" aria-hidden="true" style="border-radius:8px;">
-      <rect x="4" y="4" width="40" height="40" rx="10" fill="#1f8fff"/>
-      <rect x="22" y="12" width="4" height="24" rx="2" fill="#ffffff"/>
-      <rect x="12" y="22" width="24" height="4" rx="2" fill="#ffffff"/>
-    </svg>
-    <span class="brand__text">MyHealth Portal</span>
-  `;
-
-  // Ensure a right-side usernav exists and move any loose control buttons into it
-  let usernav = header.querySelector('.usernav');
-  if (!usernav) {
-    usernav = document.createElement('div');
-    usernav.className = 'usernav';
-    header.appendChild(usernav);
-  }
-
-  // Move A+/A−/Dark/Contrast buttons into .usernav if they aren’t already inside the header
-  const controls = document.querySelectorAll('[data-size],[id="dark-toggle"],[id="contrast-toggle"]');
-  controls.forEach(btn => {
-    if (!header.contains(btn)) usernav.appendChild(btn);
-  });
-
-  // Guard against rogue CSS hiding the brand
-  brand.style.display = 'flex';
-  brand.style.alignItems = 'center';
-  brand.style.gap = '.6rem';
 }
 
 /* ===========================
@@ -228,12 +193,18 @@ function readLoginFields(pref) {
   return {user, pass, code};
 }
 function setStatus(msg){
-  const s=$('#login-status'); if (s){ s.textContent=msg||''; s.style.visibility = msg ? 'visible' : 'hidden'; }
+  const s=$('#login-status'); 
+  if (s){ 
+    s.textContent=msg||''; 
+    s.style.display = msg ? 'block' : 'none'; 
+  }
 }
 
 /* ---- Admin ---- */
 function initAdminLogin(){
-  const form = $('#admin-login-form'); if (!form) return;
+  const form = $('#admin-login-form'); 
+  if (!form) return;
+  
   const go = (e)=>{
     e.preventDefault();
     const {user, pass, code} = readLoginFields('ad');
@@ -277,7 +248,8 @@ function initCaregiverLogin(){
 
 /* ---- Patient ---- */
 function initPatientLogin(){
-  const form = $('#pt-login-form'); if (!form) return;
+  const form = $('#pt-login-form'); 
+  if (!form) return;
 
   const go = (e)=>{
     e.preventDefault();
@@ -304,19 +276,19 @@ function initPatientLogin(){
    =========================== */
 function renderRoleSummary(){
   const wrap = $('#role-summary'); if (!wrap) return;
-  const users  = loadUsers();
-  const admins = users.filter(u => u.role === 'admin');
-  const cgs    = users.filter(u => u.role === 'caregiver');
-  const pts    = users.filter(u => u.role === 'patient');
+  const users = loadUsers();
+  const admins = users.filter(u=>u.role==='admin');
+  const cgs    = users.filter(u=>u.role==='caregiver');
+  const pts    = users.filter(u=>u.role==='patient');
 
   const chip = (label, value) =>
     `<span class="pill" style="font-size:.85rem;">${label}</span>
-     <span class="pill" style="background:var(--surface);border:1px solid var(--border);">${value}</span>`;
+     <span class="pill" style="background:var(--panel);border:1px solid var(--line);">${value}</span>`;
 
   const parts = [];
-  if (admins[0]) parts.push(chip('Site Admin', admins[0].username || 'admin'));
-  if (cgs[0])    parts.push(chip('Caregiver', cgs[0].username || 'caregiver'));
-  if (pts[0])    parts.push(chip('Patient', pts[0].fullName || 'Patient'));
+  if (admins[0]) parts.push(chip('Site Admin', admins[0].username||'admin'));
+  if (cgs[0])    parts.push(chip('Caregiver', cgs[0].username||'caregiver'));
+  if (pts[0])    parts.push(chip('Patient', pts[0].fullName||'Patient'));
   wrap.innerHTML = parts.join('');
 }
 
@@ -476,7 +448,7 @@ function initCaregiver(){
     const parts=[];
     if(dir)parts.push(dir);
     if(qty)parts.push(`${qty} ${form==='liquid'?'mL':(form==='inhaler'?'puffs':'tabs')}`);
-    if(ref)parts.push(`${ref} refill${ref==='1'?'':''}s`);
+    if(ref)parts.push(`${ref} refill${ref==='1'?'':'s'}`);
     if(start)parts.push(`start ${start}`);
     if(end)parts.push(`end ${end}`);
     if(notes)parts.push(notes);
