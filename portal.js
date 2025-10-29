@@ -137,7 +137,7 @@ function renderAdminTickets(){
 }
 
 /* ===========================
-   Global UI toggles + brand
+   Global UI toggles
    =========================== */
 function initGlobal(){
   $$('.text-size').forEach(btn=>{
@@ -160,62 +160,6 @@ function initGlobal(){
     del(K.currentUserId); del(K.currentPatientId); del(K.adminLogged);
     location.href='index.html';
   }));
-
-  // Brand: top-left in header
-  ensureHeaderBrand();
-}
-
-/* Ensure a left-side header brand; move controls to right */
-function ensureHeaderBrand(){
-  // Remove any old right-fixed brand if it exists
-  document.querySelector('.global-brand')?.remove();
-
-  // Ensure header exists
-  let header = document.querySelector('header.appbar');
-  if (!header) {
-    header = document.createElement('header');
-    header.className = 'appbar';
-    document.body.insertBefore(header, document.body.firstChild);
-  }
-
-  // Ensure brand (left side) exists
-  let brand = header.querySelector('.brand');
-  if (!brand) {
-    brand = document.createElement('a');
-    brand.className = 'brand';
-    brand.href = 'index.html';
-    brand.setAttribute('aria-label', 'MyHealth Portal – Home');
-    header.prepend(brand);
-  }
-
-  // Inject icon + text
-  brand.innerHTML = `
-    <svg class="brand__mark" viewBox="0 0 48 48" aria-hidden="true" style="border-radius:8px;">
-      <rect x="4" y="4" width="40" height="40" rx="10" fill="#1f8fff"/>
-      <rect x="22" y="12" width="4" height="24" rx="2" fill="#ffffff"/>
-      <rect x="12" y="22" width="24" height="4" rx="2" fill="#ffffff"/>
-    </svg>
-    <span class="brand__text">MyHealth Portal</span>
-  `;
-
-  // Ensure a right-side usernav exists and move any loose control buttons into it
-  let usernav = header.querySelector('.usernav');
-  if (!usernav) {
-    usernav = document.createElement('div');
-    usernav.className = 'usernav';
-    header.appendChild(usernav);
-  }
-
-  // Move A+/A−/Dark/Contrast buttons into .usernav if they aren’t already inside the header
-  const controls = document.querySelectorAll('[data-size],[id="dark-toggle"],[id="contrast-toggle"]');
-  controls.forEach(btn => {
-    if (!header.contains(btn)) usernav.appendChild(btn);
-  });
-
-  // Guard against rogue CSS hiding the brand
-  brand.style.display = 'flex';
-  brand.style.alignItems = 'center';
-  brand.style.gap = '.6rem';
 }
 
 /* ===========================
@@ -251,8 +195,9 @@ function initAdminLogin(){
   form.addEventListener('submit', go);
 }
 
-/* ---- Caregiver ---- */
+/* ---- Caregiver (your page title/login file is login.html) ---- */
 function initCaregiverLogin(){
+  // Bind either #cg-login-form or a generic #login-form on login.html
   const form = $('#cg-login-form') || $('#login-form');
   if (!form) return;
 
@@ -267,6 +212,7 @@ function initCaregiverLogin(){
     if (cg){
       setStatus('');
       set(K.currentUserId, cg.id);
+      // keep last selected patient if any
       location.href='caregiver.html';
       return;
     }
@@ -304,19 +250,19 @@ function initPatientLogin(){
    =========================== */
 function renderRoleSummary(){
   const wrap = $('#role-summary'); if (!wrap) return;
-  const users  = loadUsers();
-  const admins = users.filter(u => u.role === 'admin');
-  const cgs    = users.filter(u => u.role === 'caregiver');
-  const pts    = users.filter(u => u.role === 'patient');
+  const users = loadUsers();
+  const admins = users.filter(u=>u.role==='admin');
+  const cgs    = users.filter(u=>u.role==='caregiver');
+  const pts    = users.filter(u=>u.role==='patient');
 
   const chip = (label, value) =>
     `<span class="pill" style="font-size:.85rem;">${label}</span>
      <span class="pill" style="background:var(--surface);border:1px solid var(--border);">${value}</span>`;
 
   const parts = [];
-  if (admins[0]) parts.push(chip('Site Admin', admins[0].username || 'admin'));
-  if (cgs[0])    parts.push(chip('Caregiver', cgs[0].username || 'caregiver'));
-  if (pts[0])    parts.push(chip('Patient', pts[0].fullName || 'Patient'));
+  if (admins[0]) parts.push(chip('Site Admin', admins[0].username||'admin'));
+  if (cgs[0])    parts.push(chip('Caregiver', cgs[0].username||'caregiver'));
+  if (pts[0])    parts.push(chip('Patient', pts[0].fullName||'Patient'));
   wrap.innerHTML = parts.join('');
 }
 
@@ -327,6 +273,7 @@ function initAdmin(){
   const list=$('#user-list');
   renderUserList(); renderRoleSummary();
 
+  // >>> YOUR REQUESTED SUBMIT HANDLER (added; replaces previous one) <<<
   form.addEventListener('submit',(e)=>{
     e.preventDefault();
     const role=$('#role').value, fullName=$('#fullName').value.trim(),
@@ -476,7 +423,7 @@ function initCaregiver(){
     const parts=[];
     if(dir)parts.push(dir);
     if(qty)parts.push(`${qty} ${form==='liquid'?'mL':(form==='inhaler'?'puffs':'tabs')}`);
-    if(ref)parts.push(`${ref} refill${ref==='1'?'':''}s`);
+    if(ref)parts.push(`${ref} refill${ref==='1'?'':'s'}`);
     if(start)parts.push(`start ${start}`);
     if(end)parts.push(`end ${end}`);
     if(notes)parts.push(notes);
@@ -606,10 +553,10 @@ function fmtWhen(iso){ const d=iso?new Date(iso):null; return d&&!Number.isNaN(d
 function escapeHTML(s){ return (s||'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c])); }
 
 document.addEventListener('DOMContentLoaded', ()=>{
-  seedDemo();
+  seedDemo();       // ensure demo users exist (never wipes)
   initGlobal();
 
-  // Bind logins
+  // Bind logins (robust to filename/ID variations)
   initAdminLogin();
   initCaregiverLogin();
   initPatientLogin();
