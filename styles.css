@@ -27,7 +27,7 @@ html,body{ height:100%; }
 body{
   margin:0;
   font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
-  color:var(--ink);
+  color:var(--ink);               /* <— all default text uses --ink */
   background:var(--bg);
   line-height:1.6;
   font-size:var(--base-font);
@@ -64,7 +64,7 @@ a:hover{ text-decoration:underline; }
 .btn--ghost{ background:transparent; }
 .btn:focus-visible{ outline: 3px solid transparent; box-shadow: 0 0 0 3px #2463eb33; }
 
-/* TOP BUTTONS */
+/* TOP BUTTONS: black + pop/press + selected */
 .btn--top{
   background:#000; color:#fff; border-color:#000;
   box-shadow: 0 2px 0 rgba(0,0,0,.4), 0 6px 14px rgba(0,0,0,.1);
@@ -76,11 +76,11 @@ a:hover{ text-decoration:underline; }
 .btn--top[aria-pressed="true"]{ background:#1e88e5; border-color:#1e88e5; color:#fff; }
 .btn--link{ text-decoration:none; font-weight:700; }
 
-/* High-contrast */
+/* High-contrast theme (keeps text dark for strong contrast) */
 body.contrast{
   --bg:#ffffff;
   --panel:#ffffff;
-  --ink:#0b0b0b;
+  --ink:#0b0b0b;    /* keep black text */
   --muted:#222;
   --line:#0d0d0d33;
   --pill-bg:#efefef;
@@ -90,12 +90,12 @@ body.contrast{
 body.contrast a{ text-decoration: underline; text-underline-offset: 3px; }
 body.contrast .btn--top[aria-pressed="true"]{ background:#0b3a79; border-color:#0b3a79; }
 
-/* Dark theme */
+/* Dark theme — flip ink/muted to white */
 body.dark{
   --panel:#0f141b;
   --bg:#0b1016;
-  --ink:#ffffff;
-  --muted:#b8c1cc;
+  --ink:#ffffff;    /* DARK text = white */
+  --muted:#b8c1cc;  /* softer white for muted text */
   --line:#1f2a37;
   --pill-bg:#121a24;
 }
@@ -111,9 +111,10 @@ body.dark .btn--top[aria-pressed="true"]{ background:#0ea5a5; border-color:#0ea5
   align-items:center; padding: clamp(.75rem, 2vw, 1rem) clamp(12px, 3vw, 24px);
   background:var(--panel); border-bottom:1px solid var(--line);
 }
-
-/* HIDE any left-side header brand so only the top-right button appears */
-.appbar .brand { display: none !important; }
+.brand{ display:flex; align-items:center; gap:.6rem; font-weight:800; }
+.brand__mark{ display:inline-grid; place-items:center; width:32px; height:32px; border-radius:8px; background:var(--brand); color:#fff; font-size:18px; }
+/* brand text now follows --ink so it turns white in dark mode */
+.brand__text{ color:var(--ink); letter-spacing:.3px; }
 
 .usernav{ display:flex; gap:.6rem; align-items:center; justify-content:flex-end; flex-wrap:wrap; }
 
@@ -169,7 +170,7 @@ h1{ margin:.1rem 0; font-size: var(--step-2); }
 .card__header{
   display:flex; align-items:center; justify-content:space-between; padding:1rem 1.1rem; border-bottom:1px solid var(--line);
 }
-.card__title{ margin:0; font-size: var(--step-1); font-weight:800; }
+.card__title{ margin:0; font-size: var(--step-1); font-weight:800; color:var(--ink); }
 .card__footer{ padding:.9rem 1.1rem; border-top:1px solid var(--line); display:flex; gap:.6rem; }
 
 .card > .list, .card > .mail, .card > .vitals, .card > .table{ padding: .8rem 1.1rem 1.1rem; }
@@ -212,8 +213,7 @@ h1{ margin:.1rem 0; font-size: var(--step-2); }
   .layout{ grid-template-columns: 1fr; }
   .sidenav{ position:static; flex-direction:row; overflow:auto; white-space:nowrap; }
 }
-
-/* === Bottom-right Chat === */
+/* === Bottom-right Chat (uses existing theme vars) === */
 .chat-fab{
   position:fixed; right:18px; bottom:18px; z-index:1000;
 }
@@ -243,31 +243,22 @@ h1{ margin:.1rem 0; font-size: var(--step-2); }
 @media (max-width: 900px){
   .chat-panel{ height:60vh; }
 }
+/* Add a bit of space between the header title and any helper text */
+.card__header {
+  display: flex;
+  align-items: baseline;
+}
+.card__header .card__title {
+  margin-right: .6rem; /* adjust to taste (.5–1rem) */
+}
 
-/* Header spacing tweaks on small screens */
-.card__header { display:flex; align-items:baseline; }
-.card__header .card__title { margin-right:.6rem; }
+/* Stack neatly on small screens */
 @media (max-width: 520px){
-  .card__header { flex-direction:column; gap:.25rem; }
-  .card__header .card__title { margin-right:0; }
-}
-
-/* ===== Fixed top-right brand ===== */
-.global-brand{
-  position:fixed;
-  top:12px;
-  right:12px;
-  display:inline-flex;
-  gap:.55rem;
-  align-items:center;
-  z-index:9999;
-  text-decoration:none;
-  font-weight:800;
-  color:var(--ink);
-  user-select:none;
-}
-.global-brand__icon{ width:28px; height:28px; border-radius:8px; flex:0 0 28px; }
-.global-brand__text{ line-height:1; }
-@media (max-width:480px){
-  .global-brand__text{ display:none; } /* icon-only on tiny screens */
+  .card__header {
+    flex-direction: column;
+    gap: .25rem;
+  }
+  .card__header .card__title {
+    margin-right: 0;
+  }
 }
