@@ -137,7 +137,7 @@ function renderAdminTickets(){
 }
 
 /* ===========================
-   Global UI toggles
+   Global UI toggles + brand
    =========================== */
 function initGlobal(){
   $$('.text-size').forEach(btn=>{
@@ -160,6 +160,27 @@ function initGlobal(){
     del(K.currentUserId); del(K.currentPatientId); del(K.adminLogged);
     location.href='index.html';
   }));
+
+  // inject top-right brand on every page
+  injectGlobalBrand();
+}
+
+/* Inject the fixed top-right brand icon + label */
+function injectGlobalBrand(){
+  if (document.querySelector('.global-brand')) return; // already added
+  const brand = document.createElement('a');
+  brand.className = 'global-brand';
+  brand.href = 'index.html';
+  brand.setAttribute('aria-label', 'MyHealth Portal – Home');
+  brand.innerHTML = `
+    <svg class="global-brand__icon" viewBox="0 0 48 48" aria-hidden="true">
+      <rect x="4" y="4" width="40" height="40" rx="10" fill="#1f8fff"/>
+      <rect x="22" y="12" width="4" height="24" rx="2" fill="#ffffff"/>
+      <rect x="12" y="22" width="24" height="4" rx="2" fill="#ffffff"/>
+    </svg>
+    <span class="global-brand__text">MyHealth Portal</span>
+  `;
+  document.body.appendChild(brand);
 }
 
 /* ===========================
@@ -423,7 +444,7 @@ function initCaregiver(){
     const parts=[];
     if(dir)parts.push(dir);
     if(qty)parts.push(`${qty} ${form==='liquid'?'mL':(form==='inhaler'?'puffs':'tabs')}`);
-    if(ref)parts.push(`${ref} refill${ref==='1'?'':'s'}`);
+    if(ref)parts.push(`${ref} refill${ref==='1'?'':''}s`);
     if(start)parts.push(`start ${start}`);
     if(end)parts.push(`end ${end}`);
     if(notes)parts.push(notes);

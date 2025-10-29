@@ -170,7 +170,7 @@ h1{ margin:.1rem 0; font-size: var(--step-2); }
 .card__header{
   display:flex; align-items:center; justify-content:space-between; padding:1rem 1.1rem; border-bottom:1px solid var(--line);
 }
-.card__title{ margin:0; font-size: var(--step-1); font-weight:800; color:var(--ink); }
+.card__title{ margin:0; font-size: var(--step-1); font-weight:800; }
 .card__footer{ padding:.9rem 1.1rem; border-top:1px solid var(--line); display:flex; gap:.6rem; }
 
 .card > .list, .card > .mail, .card > .vitals, .card > .table{ padding: .8rem 1.1rem 1.1rem; }
@@ -261,4 +261,25 @@ h1{ margin:.1rem 0; font-size: var(--step-2); }
   .card__header .card__title {
     margin-right: 0;
   }
+}
+
+/* ===== Global top-right brand (always visible) ===== */
+.global-brand{
+  position:fixed;
+  top:12px;
+  right:12px;
+  display:inline-flex;
+  gap:.55rem;
+  align-items:center;
+  z-index:9999;
+  text-decoration:none;
+  font-weight:800;
+  color:var(--ink);
+  user-select:none;
+}
+.global-brand__icon{ width:28px; height:28px; border-radius:8px; flex:0 0 28px; }
+.global-brand__text{ line-height:1; }
+
+@media (max-width:480px){
+  .global-brand__text{ display:none; } /* icon-only on tiny screens */
 }
