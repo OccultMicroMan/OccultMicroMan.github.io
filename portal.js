@@ -161,33 +161,34 @@ function initGlobal(){
     location.href='index.html';
   }));
 
-  // Brand: top-left in header (and ensure any fixed right brand is removed)
+  // Brand: top-left in header
   ensureHeaderBrand();
 }
 
-/* Ensure a left-side header brand; remove any right-side fixed brand */
+/* Ensure a left-side header brand; move controls to right */
 function ensureHeaderBrand(){
-  document.querySelector('.global-brand')?.remove(); // clean any previous right fixed brand
+  // Remove any old right-fixed brand if it exists
+  document.querySelector('.global-brand')?.remove();
 
-  // ensure there is a header.appbar
-  let header = document.querySelector('.appbar');
-  if (!header){
+  // Ensure header exists
+  let header = document.querySelector('header.appbar');
+  if (!header) {
     header = document.createElement('header');
     header.className = 'appbar';
     document.body.insertBefore(header, document.body.firstChild);
   }
 
-  // ensure left brand anchor exists
+  // Ensure brand (left side) exists
   let brand = header.querySelector('.brand');
-  if (!brand){
+  if (!brand) {
     brand = document.createElement('a');
     brand.className = 'brand';
     brand.href = 'index.html';
-    brand.setAttribute('aria-label','MyHealth Portal – Home');
+    brand.setAttribute('aria-label', 'MyHealth Portal – Home');
     header.prepend(brand);
   }
 
-  // icon + text
+  // Inject icon + text
   brand.innerHTML = `
     <svg class="brand__mark" viewBox="0 0 48 48" aria-hidden="true" style="border-radius:8px;">
       <rect x="4" y="4" width="40" height="40" rx="10" fill="#1f8fff"/>
@@ -196,6 +197,25 @@ function ensureHeaderBrand(){
     </svg>
     <span class="brand__text">MyHealth Portal</span>
   `;
+
+  // Ensure a right-side usernav exists and move any loose control buttons into it
+  let usernav = header.querySelector('.usernav');
+  if (!usernav) {
+    usernav = document.createElement('div');
+    usernav.className = 'usernav';
+    header.appendChild(usernav);
+  }
+
+  // Move A+/A−/Dark/Contrast buttons into .usernav if they aren’t already inside the header
+  const controls = document.querySelectorAll('[data-size],[id="dark-toggle"],[id="contrast-toggle"]');
+  controls.forEach(btn => {
+    if (!header.contains(btn)) usernav.appendChild(btn);
+  });
+
+  // Guard against rogue CSS hiding the brand
+  brand.style.display = 'flex';
+  brand.style.alignItems = 'center';
+  brand.style.gap = '.6rem';
 }
 
 /* ===========================
