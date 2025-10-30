@@ -489,11 +489,19 @@ function initCaregiver(){
 
   // Initialize chat with patient selector
   (function initChatWithSelector(){
+    console.log('Initializing chat...');
     const chatPanel=$('#chat-panel'), chatForm=$('#chat-form'), chatInput=$('#chat-input'), 
           chatToggle=$('#chat-toggle'), chatPatientSelect=$('#chat-patient-select');
-    if (!chatPanel || !chatForm || !chatToggle || !chatPatientSelect) return;
+    
+    console.log('Chat elements:', {chatPanel, chatForm, chatInput, chatToggle, chatPatientSelect});
+    
+    if (!chatPanel || !chatForm || !chatToggle || !chatPatientSelect) {
+      console.log('Missing chat elements');
+      return;
+    }
 
     const pts = findUsersByRole('patient');
+    console.log('Patients found:', pts);
     chatPatientSelect.innerHTML = pts.map(p=>`<option value="${p.id}">${p.fullName}</option>`).join('');
     const lastChatPatient = get(K.currentPatientId);
     if (lastChatPatient && pts.find(p=>p.id===lastChatPatient)) {
@@ -503,11 +511,19 @@ function initCaregiver(){
     }
 
     const getChatPatientId = () => chatPatientSelect.value;
-    const refreshChat = () => renderMsgs(getChatPatientId(), '#chat-list');
+    const refreshChat = () => {
+      console.log('Refreshing chat for patient:', getChatPatientId());
+      renderMsgs(getChatPatientId(), '#chat-list');
+    };
 
-    chatToggle.addEventListener('click', ()=>{
+    chatToggle.addEventListener('click', (e)=>{
+      console.log('Chat toggle clicked');
+      e.preventDefault();
+      e.stopPropagation();
+      const wasOpen = chatPanel.classList.contains('open');
       chatPanel.classList.toggle('open');
-      if (chatPanel.classList.contains('open')) {
+      console.log('Chat panel open:', !wasOpen);
+      if (!wasOpen) {
         refreshChat();
       }
     });
@@ -516,40 +532,74 @@ function initCaregiver(){
 
     chatForm.addEventListener('submit',(e)=>{
       e.preventDefault();
-      const txt=(chatInput.value||'').trim(); if(!txt) return;
+      console.log('Chat form submitted');
+      const txt=(chatInput.value||'').trim(); 
+      if(!txt) return;
       const patientId = getChatPatientId();
+      console.log('Sending message to patient:', patientId);
       addMsg(patientId, 'caregiver', txt);
       chatInput.value=''; 
       refreshChat();
     });
+    
+    console.log('Chat initialized successfully');
   })();
 
   // Initialize issue/ticket panel for admin
   (function initIssueBox(){
+    console.log('Initializing issue panel...');
     const panel=$('#issue-panel'), form=$('#issue-form'), input=$('#issue-input');
     const toggleBtn=$('#issue-toggle-fab');
     const sidenavBtn=$('#issue-toggle');
-    if (!panel || !form) return;
+    
+    console.log('Issue elements:', {panel, form, input, toggleBtn, sidenavBtn});
+    
+    if (!panel || !form) {
+      console.log('Missing issue panel elements');
+      return;
+    }
 
     const getPeerId=()=> get(K.currentPatientId);
-    const refresh=()=> renderIssues(getPeerId(), '#issue-list');
+    const refresh=()=> {
+      console.log('Refreshing issues for patient:', getPeerId());
+      renderIssues(getPeerId(), '#issue-list');
+    };
     
-    const togglePanel = ()=>{
+    const togglePanel = (e)=>{
+      console.log('Issue panel toggle clicked');
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      const wasOpen = panel.classList.contains('open');
       panel.classList.toggle('open');
-      if (panel.classList.contains('open')) {
+      console.log('Issue panel open:', !wasOpen);
+      if (!wasOpen) {
         refresh();
       }
     };
 
-    if (toggleBtn) toggleBtn.addEventListener('click', togglePanel);
-    if (sidenavBtn) sidenavBtn.addEventListener('click', togglePanel);
+    if (toggleBtn) {
+      console.log('Adding click listener to issue FAB');
+      toggleBtn.addEventListener('click', togglePanel);
+    }
+    if (sidenavBtn) {
+      console.log('Adding click listener to sidenav issue button');
+      sidenavBtn.addEventListener('click', togglePanel);
+    }
 
     form.addEventListener('submit',(e)=>{
       e.preventDefault();
-      const txt=(input.value||'').trim(); if(!txt) return;
+      console.log('Issue form submitted');
+      const txt=(input.value||'').trim(); 
+      if(!txt) return;
+      console.log('Adding issue:', txt);
       addIssue(getPeerId(), 'caregiver', txt);
-      input.value=''; refresh();
+      input.value=''; 
+      refresh();
     });
+    
+    console.log('Issue panel initialized successfully');
   })();
 }
 
