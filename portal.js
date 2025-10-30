@@ -487,22 +487,64 @@ function initCaregiver(){
     alert('Saved.');
   });
 
-  initFloatingChat({
-    title:'Secure Messages',
-    getPeerId:()=> get(K.currentPatientId),
-    who:'caregiver',
-    openByDefault:false
-  });
+  // Initialize chat with patient selector
+  (function initChatWithSelector(){
+    const chatPanel=$('#chat-panel'), chatForm=$('#chat-form'), chatInput=$('#chat-input'), 
+          chatToggle=$('#chat-toggle'), chatPatientSelect=$('#chat-patient-select');
+    if (!chatPanel || !chatForm || !chatToggle || !chatPatientSelect) return;
 
+    const pts = findUsersByRole('patient');
+    chatPatientSelect.innerHTML = pts.map(p=>`<option value="${p.id}">${p.fullName}</option>`).join('');
+    const lastChatPatient = get(K.currentPatientId);
+    if (lastChatPatient && pts.find(p=>p.id===lastChatPatient)) {
+      chatPatientSelect.value = lastChatPatient;
+    } else if (pts[0]) {
+      chatPatientSelect.value = pts[0].id;
+    }
+
+    const getChatPatientId = () => chatPatientSelect.value;
+    const refreshChat = () => renderMsgs(getChatPatientId(), '#chat-list');
+
+    chatToggle.addEventListener('click', ()=>{
+      const isOpen = chatPanel.classList.toggle('open');
+      if (isOpen) {
+        chatPanel.style.display = 'flex';
+        refreshChat();
+      } else {
+        chatPanel.style.display = 'none';
+      }
+    });
+
+    chatPatientSelect.addEventListener('change', refreshChat);
+
+    chatForm.addEventListener('submit',(e)=>{
+      e.preventDefault();
+      const txt=(chatInput.value||'').trim(); if(!txt) return;
+      const patientId = getChatPatientId();
+      addMsg(patientId, 'caregiver', txt);
+      chatInput.value=''; 
+      refreshChat();
+    });
+  })();
+
+  // Initialize issue/ticket panel for admin
   (function initIssueBox(){
-    const panel=$('#issue-panel'), form=$('#issue-form'), input=$('#issue-input'), toggle=$('#issue-toggle');
-    if (!panel || !form || !toggle) return;
+    const panel=$('#issue-panel'), form=$('#issue-form'), input=$('#issue-input');
+    const toggleBtn=$('#issue-toggle-fab');
+    const sidenavBtn=$('#issue-toggle');
+    if (!panel || !form) return;
+
     const getPeerId=()=> get(K.currentPatientId);
     const refresh=()=> renderIssues(getPeerId(), '#issue-list');
-    toggle.addEventListener('click', ()=>{
+    
+    const togglePanel = ()=>{
       panel.classList.toggle('open');
       if (panel.classList.contains('open')) refresh();
-    });
+    };
+
+    if (toggleBtn) toggleBtn.addEventListener('click', togglePanel);
+    if (sidenavBtn) sidenavBtn.addEventListener('click', togglePanel);
+
     form.addEventListener('submit',(e)=>{
       e.preventDefault();
       const txt=(input.value||'').trim(); if(!txt) return;
