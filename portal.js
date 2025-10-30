@@ -26,7 +26,7 @@ function checkAuth(){
   const currentPath = window.location.pathname;
   
   // Public pages that don't require auth
-  const publicPages = ['index.html', 'login.html', 'patient-login.html', 'admin-login.html', '404.html', '/'];
+  const publicPages = ['index.html', 'login.html', 'caregiver-login.html', 'patient-login.html', 'admin-login.html', '404.html', '/'];
   const isPublicPage = publicPages.some(p => currentPath.endsWith(p)) || currentPath === '/';
   
   if (isPublicPage) return; // Allow access to public pages
@@ -205,7 +205,7 @@ function initGlobal(){
 }
 
 /* ===========================
-   Hardened login helpers - MINIMAL VERSION
+   Login helpers
    =========================== */
 function readLoginFields(pref) {
   const user = ($(`#${pref}-user`)||$('#user')||$('#username'))?.value?.trim()||'';
@@ -214,17 +214,19 @@ function readLoginFields(pref) {
   return {user, pass, code};
 }
 
-// ABSOLUTELY MINIMAL - only change text content, nothing else
 function setStatus(msg){
   const s=$('#login-status'); 
   if (s && msg){ 
     s.textContent = msg;
+    s.style.display = 'block';
   }
 }
 
 /* ---- Admin ---- */
 function initAdminLogin(){
-  const form = $('#admin-login-form'); if (!form) return;
+  const form = $('#admin-login-form'); 
+  if (!form) return;
+  
   form.addEventListener('submit', (e)=>{
     e.preventDefault();
     const {user, pass, code} = readLoginFields('ad');
@@ -264,7 +266,8 @@ function initCaregiverLogin(){
 
 /* ---- Patient ---- */
 function initPatientLogin(){
-  const form = $('#pt-login-form'); if (!form) return;
+  const form = $('#pt-login-form'); 
+  if (!form) return;
 
   form.addEventListener('submit', (e)=>{
     e.preventDefault();
@@ -409,8 +412,6 @@ function initCaregiver(){
     if ($('#f-access')) $('#f-access').value = p.accessCode||'0000';
     if ($('#f-meds')) $('#f-meds').value = (p.meds||[]).join('\n');
     renderMedPreview();
-    renderMsgs(p.id, '#chat-list');
-    renderIssues(p.id, '#issue-list');
   }
   sel.addEventListener('change', ()=> loadPatientToForm(findUserById(sel.value)));
   if (sel.value) loadPatientToForm(findUserById(sel.value));
@@ -453,8 +454,6 @@ function initCaregiver(){
     const dir=($('#med-directions')?.value||'').trim();
     const qty=($('#med-qty')?.value||'').trim();
     const ref=($('#med-refills')?.value||'').trim();
-    const start=($('#med-start')?.value||'').trim();
-    const end=($('#med-end')?.value||'').trim();
     const notes=($('#med-notes')?.value||'').trim();
 
     const left=[name, strength&&unit?`${strength} ${unit}`:strength||unit].filter(Boolean).join(' ');
@@ -462,8 +461,6 @@ function initCaregiver(){
     if(dir)parts.push(dir);
     if(qty)parts.push(`${qty} ${form==='liquid'?'mL':(form==='inhaler'?'puffs':'tabs')}`);
     if(ref)parts.push(`${ref} refill${ref==='1'?'':'s'}`);
-    if(start)parts.push(`start ${start}`);
-    if(end)parts.push(`end ${end}`);
     if(notes)parts.push(notes);
 
     const line=`${left} – ${parts.join(' · ')}`.trim();
@@ -488,20 +485,10 @@ function initCaregiver(){
   });
 
   // Initialize chat with patient selector
-  (function initChatWithSelector(){
-    console.log('Initializing chat...');
-    const chatPanel=$('#chat-panel'), chatForm=$('#chat-form'), chatInput=$('#chat-input'), 
-          chatToggle=$('#chat-toggle'), chatPatientSelect=$('#chat-patient-select');
-    
-    console.log('Chat elements:', {chatPanel, chatForm, chatInput, chatToggle, chatPatientSelect});
-    
-    if (!chatPanel || !chatForm || !chatToggle || !chatPatientSelect) {
-      console.log('Missing chat elements');
-      return;
-    }
-
-    const pts = findUsersByRole('patient');
-    console.log('Patients found:', pts);
+  const chatPanel=$('#chat-panel'), chatForm=$('#chat-form'), chatInput=$('#chat-input'), 
+        chatToggle=$('#chat-toggle'), chatPatientSelect=$('#chat-patient-select');
+  
+  if (chatPanel && chatForm && chatToggle && chatPatientSelect) {
     chatPatientSelect.innerHTML = pts.map(p=>`<option value="${p.id}">${p.fullName}</option>`).join('');
     const lastChatPatient = get(K.currentPatientId);
     if (lastChatPatient && pts.find(p=>p.id===lastChatPatient)) {
@@ -511,19 +498,11 @@ function initCaregiver(){
     }
 
     const getChatPatientId = () => chatPatientSelect.value;
-    const refreshChat = () => {
-      console.log('Refreshing chat for patient:', getChatPatientId());
-      renderMsgs(getChatPatientId(), '#chat-list');
-    };
+    const refreshChat = () => renderMsgs(getChatPatientId(), '#chat-list');
 
-    chatToggle.addEventListener('click', (e)=>{
-      console.log('Chat toggle clicked');
-      e.preventDefault();
-      e.stopPropagation();
-      const wasOpen = chatPanel.classList.contains('open');
+    chatToggle.addEventListener('click', ()=>{
       chatPanel.classList.toggle('open');
-      console.log('Chat panel open:', !wasOpen);
-      if (!wasOpen) {
+      if (chatPanel.classList.contains('open')) {
         refreshChat();
       }
     });
@@ -532,75 +511,41 @@ function initCaregiver(){
 
     chatForm.addEventListener('submit',(e)=>{
       e.preventDefault();
-      console.log('Chat form submitted');
-      const txt=(chatInput.value||'').trim(); 
-      if(!txt) return;
+      const txt=(chatInput.value||'').trim(); if(!txt) return;
       const patientId = getChatPatientId();
-      console.log('Sending message to patient:', patientId);
       addMsg(patientId, 'caregiver', txt);
       chatInput.value=''; 
       refreshChat();
     });
-    
-    console.log('Chat initialized successfully');
-  })();
+  }
 
   // Initialize issue/ticket panel for admin
-  (function initIssueBox(){
-    console.log('Initializing issue panel...');
-    const panel=$('#issue-panel'), form=$('#issue-form'), input=$('#issue-input');
-    const toggleBtn=$('#issue-toggle-fab');
-    const sidenavBtn=$('#issue-toggle');
-    
-    console.log('Issue elements:', {panel, form, input, toggleBtn, sidenavBtn});
-    
-    if (!panel || !form) {
-      console.log('Missing issue panel elements');
-      return;
-    }
-
+  const issuePanel=$('#issue-panel'), issueForm=$('#issue-form'), issueInput=$('#issue-input');
+  const issueToggleFab=$('#issue-toggle-fab');
+  const issueToggleSide=$('#issue-toggle');
+  
+  if (issuePanel && issueForm) {
     const getPeerId=()=> get(K.currentPatientId);
-    const refresh=()=> {
-      console.log('Refreshing issues for patient:', getPeerId());
-      renderIssues(getPeerId(), '#issue-list');
-    };
+    const refreshIssues=()=> renderIssues(getPeerId(), '#issue-list');
     
-    const togglePanel = (e)=>{
-      console.log('Issue panel toggle clicked');
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-      const wasOpen = panel.classList.contains('open');
-      panel.classList.toggle('open');
-      console.log('Issue panel open:', !wasOpen);
-      if (!wasOpen) {
-        refresh();
+    const toggleIssuePanel = ()=>{
+      issuePanel.classList.toggle('open');
+      if (issuePanel.classList.contains('open')) {
+        refreshIssues();
       }
     };
 
-    if (toggleBtn) {
-      console.log('Adding click listener to issue FAB');
-      toggleBtn.addEventListener('click', togglePanel);
-    }
-    if (sidenavBtn) {
-      console.log('Adding click listener to sidenav issue button');
-      sidenavBtn.addEventListener('click', togglePanel);
-    }
+    if (issueToggleFab) issueToggleFab.addEventListener('click', toggleIssuePanel);
+    if (issueToggleSide) issueToggleSide.addEventListener('click', toggleIssuePanel);
 
-    form.addEventListener('submit',(e)=>{
+    issueForm.addEventListener('submit',(e)=>{
       e.preventDefault();
-      console.log('Issue form submitted');
-      const txt=(input.value||'').trim(); 
-      if(!txt) return;
-      console.log('Adding issue:', txt);
+      const txt=(issueInput.value||'').trim(); if(!txt) return;
       addIssue(getPeerId(), 'caregiver', txt);
-      input.value=''; 
-      refresh();
+      issueInput.value=''; 
+      refreshIssues();
     });
-    
-    console.log('Issue panel initialized successfully');
-  })();
+  }
 }
 
 /* ===========================
@@ -681,7 +626,7 @@ function escapeHTML(s){ return (s||'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':
 
 document.addEventListener('DOMContentLoaded', ()=>{
   seedDemo();
-  checkAuth(); // Check authentication on page load
+  checkAuth();
   initGlobal();
   initAdminLogin();
   initCaregiverLogin();
