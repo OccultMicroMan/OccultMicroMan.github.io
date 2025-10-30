@@ -83,7 +83,7 @@
             <input id="f-access" type="text" inputmode="numeric" placeholder="4-digit patient access code" />
           </label>
 
-          <button type="button" class="btn btn--primary" id="save-patient">Save Patient Info</button>
+          <button type="button" class="btn btn--primary" id="save-patient" style="padding:.5rem 1rem;font-size:.9rem;">Save Patient Info</button>
         </form>
       </article>
 
@@ -132,22 +132,15 @@
             <input id="med-notes" type="text" placeholder="Additional notes" />
           </label>
 
-          <button type="button" class="btn btn--primary" id="med-add">Add Medication</button>
+          <button type="button" class="btn btn--primary" id="med-add" style="padding:.5rem 1rem;font-size:.9rem;">Add Medication</button>
         </div>
 
         <h3 style="margin:1rem 0 .5rem; font-size:1rem;">Current Medications</h3>
-        <ul class="list" id="med-list-care"></ul>
-
-        <details style="margin-top:1rem;">
-          <summary style="cursor:pointer; padding:.5rem; background:var(--surface-accent); border-radius:.25rem;">
-            Advanced: Edit Raw Medication List
-          </summary>
-          <div style="margin-top:.5rem;">
-            <label style="font-size:.85rem;">Medications (one per line)
-              <textarea id="f-meds" rows="8" placeholder="Medication – directions · quantity · refills"></textarea>
-            </label>
-          </div>
-        </details>
+        <ul class="list" id="med-list-care" style="display:grid;gap:.5rem;"></ul>
+        
+        <div style="display:none;">
+          <textarea id="f-meds" rows="8"></textarea>
+        </div>
       </article>
     </section>
   </main>
@@ -157,7 +150,12 @@
   <aside id="chat-panel" class="chat-panel" aria-label="Secure Messages" aria-live="polite">
     <div class="chat-head">
       <h3 class="chat-title">Secure Messages</h3>
-      <span class="muted">Chat with patient</span>
+      <label for="chat-patient-select" style="font-size:.85rem;color:var(--muted);display:block;margin-top:.25rem;">
+        Chatting with:
+        <select id="chat-patient-select" style="font-size:.95rem;font-weight:500;border:1px solid var(--border);background:var(--surface);padding:.25rem .5rem;border-radius:.25rem;cursor:pointer;margin-left:.25rem;">
+          <option>Loading patients...</option>
+        </select>
+      </label>
     </div>
     <div class="chat-body">
       <div id="chat-list" class="list"></div>
@@ -171,11 +169,13 @@
     </div>
   </aside>
 
-  <!-- Issue Panel (slides up from bottom) -->
-  <aside id="issue-panel" class="chat-panel" aria-label="Report Issue" style="bottom:0; transform:translateY(100%); transition:transform 0.3s ease;">
+  <!-- Issue Panel (slides up from bottom-left) -->
+  <button id="issue-toggle-fab" class="chat-fab" aria-label="Report to Admin" style="left:1rem;right:auto;bottom:1rem;">📋</button>
+  <aside id="issue-panel" class="chat-panel" aria-label="Report Issue" style="left:1rem;right:auto;bottom:0;transform:translateY(100%);transition:transform 0.3s ease;">
     <div class="chat-head">
-      <h3 class="chat-title">Report Issue</h3>
-      <button class="chat-close" type="button" onclick="document.querySelector('#issue-panel').classList.remove('open')" style="background:none;border:none;font-size:1.5rem;cursor:pointer;">×</button>
+      <h3 class="chat-title">Report to Admin</h3>
+      <span class="muted" style="display:block;font-size:.85rem;margin-top:.25rem;">Submit tickets to administrators</span>
+      <button class="chat-close" type="button" onclick="document.querySelector('#issue-panel').classList.remove('open')" style="background:none;border:none;font-size:1.5rem;cursor:pointer;position:absolute;right:.5rem;top:.5rem;">×</button>
     </div>
     <div class="chat-body">
       <div id="issue-list" class="list"></div>
@@ -183,8 +183,8 @@
     <div class="chat-foot">
       <form id="issue-form">
         <label class="muted" for="issue-input">Describe the issue</label>
-        <textarea id="issue-input" rows="3" placeholder="Report a technical or medical issue…"></textarea>
-        <button class="btn btn--primary" type="submit">Submit Issue</button>
+        <textarea id="issue-input" rows="3" placeholder="Report a technical or medical issue to administrators…"></textarea>
+        <button class="btn btn--primary" type="submit">Submit Ticket</button>
       </form>
     </div>
   </aside>
