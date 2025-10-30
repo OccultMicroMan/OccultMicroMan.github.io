@@ -506,12 +506,9 @@ function initCaregiver(){
     const refreshChat = () => renderMsgs(getChatPatientId(), '#chat-list');
 
     chatToggle.addEventListener('click', ()=>{
-      const isOpen = chatPanel.classList.toggle('open');
-      if (isOpen) {
-        chatPanel.style.display = 'flex';
+      chatPanel.classList.toggle('open');
+      if (chatPanel.classList.contains('open')) {
         refreshChat();
-      } else {
-        chatPanel.style.display = 'none';
       }
     });
 
@@ -539,7 +536,9 @@ function initCaregiver(){
     
     const togglePanel = ()=>{
       panel.classList.toggle('open');
-      if (panel.classList.contains('open')) refresh();
+      if (panel.classList.contains('open')) {
+        refresh();
+      }
     };
 
     if (toggleBtn) toggleBtn.addEventListener('click', togglePanel);
