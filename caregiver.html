@@ -147,15 +147,18 @@
 
   <!-- Floating Chat (bottom-right) -->
   <button id="chat-toggle" class="chat-fab" aria-label="Open secure messages">💬</button>
-  <aside id="chat-panel" class="chat-panel" aria-label="Secure Messages" aria-live="polite" style="display:none;">
+  <aside id="chat-panel" class="chat-panel" aria-label="Secure Messages" aria-live="polite">
     <div class="chat-head">
-      <h3 class="chat-title">Secure Messages</h3>
-      <label for="chat-patient-select" style="font-size:.85rem;color:var(--muted);display:block;margin-top:.25rem;">
-        Chatting with:
-        <select id="chat-patient-select" style="font-size:.95rem;font-weight:500;border:1px solid var(--border);background:var(--surface);padding:.25rem .5rem;border-radius:.25rem;cursor:pointer;margin-left:.25rem;">
-          <option>Loading patients...</option>
-        </select>
-      </label>
+      <div>
+        <h3 class="chat-title">Secure Messages</h3>
+        <label for="chat-patient-select" style="font-size:.85rem;color:var(--muted);display:block;margin-top:.25rem;">
+          Chatting with:
+          <select id="chat-patient-select" style="font-size:.95rem;font-weight:500;border:1px solid var(--border);background:var(--surface);padding:.25rem .5rem;border-radius:.25rem;cursor:pointer;margin-left:.25rem;">
+            <option>Loading patients...</option>
+          </select>
+        </label>
+      </div>
+      <button class="chat-close" type="button" onclick="document.getElementById('chat-panel').classList.remove('open')">×</button>
     </div>
     <div class="chat-body">
       <div id="chat-list" class="list"></div>
@@ -169,13 +172,15 @@
     </div>
   </aside>
 
-  <!-- Issue Panel (slides up from bottom-left) -->
-  <button id="issue-toggle-fab" class="chat-fab" aria-label="Report to Admin" style="left:1rem;right:auto;bottom:1rem;">📋</button>
-  <aside id="issue-panel" class="chat-panel" aria-label="Report Issue" style="left:1rem;right:auto;bottom:0;transform:translateY(100%);transition:transform 0.3s ease;">
+  <!-- Issue Panel (bottom-left) -->
+  <button id="issue-toggle-fab" class="chat-fab" aria-label="Report to Admin" style="left:18px;right:auto;">📋</button>
+  <aside id="issue-panel" class="chat-panel" aria-label="Report Issue" style="left:18px;right:auto;">
     <div class="chat-head">
-      <h3 class="chat-title">Report to Admin</h3>
-      <span class="muted" style="display:block;font-size:.85rem;margin-top:.25rem;">Submit tickets to administrators</span>
-      <button class="chat-close" type="button" onclick="document.querySelector('#issue-panel').classList.remove('open')" style="background:none;border:none;font-size:1.5rem;cursor:pointer;position:absolute;right:.5rem;top:.5rem;">×</button>
+      <div>
+        <h3 class="chat-title">Report to Admin</h3>
+        <span class="muted" style="display:block;font-size:.85rem;margin-top:.25rem;">Submit tickets to administrators</span>
+      </div>
+      <button class="chat-close" type="button" onclick="document.getElementById('issue-panel').classList.remove('open')">×</button>
     </div>
     <div class="chat-body">
       <div id="issue-list" class="list"></div>
@@ -190,8 +195,9 @@
   </aside>
 
   <style>
-    #issue-panel.open {
-      transform: translateY(0);
+    #med-list-care {
+      display: grid;
+      gap: 0.5rem;
     }
   </style>
 </body>
