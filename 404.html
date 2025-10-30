@@ -3,18 +3,50 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Page Not Found — 404</title>
+  <title>Page Not Found - MyHealth Portal</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body data-page="404">
-  <main class="login-wrap" style="text-align:center;">
-    <article class="card" style="padding:2rem; max-width:560px;">
-      <h1 style="font-size:var(--step-2); margin:.2rem 0 0;">404 — Page not found</h1>
-      <p class="muted">The page you’re looking for doesn’t exist or moved.</p>
-      <div style="margin-top:1rem;">
-        <a class="btn btn--primary btn-lg" href="index.html">Back to Home</a>
-      </div>
-    </article>
+<body>
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  <header class="appbar">
+    <a class="brand" href="index.html" aria-label="Go to Home">
+      <span class="brand__mark" aria-hidden="true">
+        <svg width="32" height="32" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M256 32C256 32 160 64 96 64C96 64 96 192 96 256C96 368 256 480 256 480C256 480 416 368 416 256C416 192 416 64 416 64C352 64 256 32 256 32Z" fill="#2563EB"/>
+          <circle cx="256" cy="256" r="96" fill="white"/>
+          <path d="M256 200V312M200 256H312" stroke="#2563EB" stroke-width="32" stroke-linecap="round"/>
+        </svg>
+      </span>
+      <span class="brand__text">MyHealth Portal</span>
+    </a>
+    <nav class="usernav">
+      <button class="btn btn--top text-size" data-size="up">A+</button>
+      <button class="btn btn--top text-size" data-size="down">A−</button>
+      <button class="btn btn--top" id="dark-toggle" aria-pressed="false">Dark</button>
+      <button class="btn btn--top" id="contrast-toggle" aria-pressed="false">Contrast</button>
+    </nav>
+  </header>
+
+  <main id="main" class="layout" style="grid-template-columns: 1fr; max-width: 800px; margin-inline: auto;">
+    <section class="content">
+      <article class="card" style="text-align: center; padding: 3rem 2rem;">
+        <div style="font-size: 6rem; margin-bottom: 1rem;">❌</div>
+        <header class="card__header">
+          <h1 class="card__title" style="font-size: 2.5rem; margin-bottom: 1rem;">404 - Page Not Found</h1>
+          <p class="muted" style="font-size: 1.2rem; margin-bottom: 2rem;">
+            The page you're looking for doesn't exist or has moved
+          </p>
+        </header>
+
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem;">
+          <a href="index.html" class="btn btn--primary">Go to Home</a>
+          
+        </div>
+      </article>
+    </section>
   </main>
+
+  <script defer src="portal.js"></script>
 </body>
 </html>

@@ -19,6 +19,48 @@ const set = (k,v) => localStorage.setItem(k, v);
 const del = k => localStorage.removeItem(k);
 
 /* ===========================
+   Authentication Protection
+   =========================== */
+function checkAuth(){
+  const page = document.body.dataset.page;
+  const currentPath = window.location.pathname;
+  
+  // Public pages that don't require auth
+  const publicPages = ['index.html', 'login.html', 'patient-login.html', 'admin-login.html', '404.html', '/'];
+  const isPublicPage = publicPages.some(p => currentPath.endsWith(p)) || currentPath === '/';
+  
+  if (isPublicPage) return; // Allow access to public pages
+
+  // Check admin pages
+  if (currentPath.includes('admin.html')) {
+    if (get(K.adminLogged) !== '1') {
+      window.location.href = '404.html';
+      return;
+    }
+  }
+
+  // Check caregiver pages
+  if (currentPath.includes('caregiver.html')) {
+    const userId = get(K.currentUserId);
+    const user = findUserById(userId);
+    if (!user || user.role !== 'caregiver') {
+      window.location.href = '404.html';
+      return;
+    }
+  }
+
+  // Check patient pages
+  if (currentPath.includes('patient.html')) {
+    const userId = get(K.currentUserId);
+    const user = findUserById(userId);
+    if (!user || user.role !== 'patient') {
+      window.location.href = '404.html';
+      return;
+    }
+  }
+}
+
+/* ===========================
    Seed demo data (no wipe)
    =========================== */
 function loadUsers(){ try{ return JSON.parse(localStorage.getItem(K.users)||'[]'); }catch{return[]} }
@@ -36,8 +78,8 @@ function seedDemo(){
     { id:uid(), role:'patient',   fullName:'Patrick Tobe',  username:'ptobe',     password:'patient123',   accessCode:'0000',
       mrn:'00298371', dob:'2005-07-22', blood:'O+', allergies:'Penicillin',
       meds:[
-        'Loratadine 10 mg — Take 1 tablet daily · 30 tabs · 2 refills',
-        'Metformin 500 mg — Take 1 tablet twice daily'
+        'Loratadine 10 mg – Take 1 tablet daily · 30 tabs · 2 refills',
+        'Metformin 500 mg – Take 1 tablet twice daily'
       ]
     }
   ]);
@@ -265,7 +307,7 @@ function renderRoleSummary(){
 
 function initAdmin(){
   const form=$('#user-form'); if (!form) return;
-  if (get(K.adminLogged) !== '1'){ try{ location.href='admin-login.html'; return; }catch{} }
+  if (get(K.adminLogged) !== '1'){ try{ location.href='404.html'; return; }catch{} }
 
   const list=$('#user-list');
   renderUserList(); renderRoleSummary();
@@ -348,7 +390,7 @@ function initCaregiver(){
   if (!$('#patient-select')) return;
 
   const me=findUserById(get(K.currentUserId));
-  if (!me || me.role!=='caregiver'){ try{ location.href='login.html'; return; }catch{} }
+  if (!me || me.role!=='caregiver'){ try{ location.href='404.html'; return; }catch{} }
 
   const sel=$('#patient-select'); const pts=findUsersByRole('patient');
   sel.innerHTML = pts.map(p=>`<option value="${p.id}">${p.fullName}</option>`).join('');
@@ -380,9 +422,9 @@ function initCaregiver(){
     const ul = $('#med-list-care'); if (!ul) return;
     const lines = getTA();
     ul.innerHTML = lines.map((line,i)=>{
-      const parts = (line || '').split(' — ');
+      const parts = (line || '').split(' – ');
       const name  = parts[0] || '';
-      const rest  = parts.slice(1).join(' — ');
+      const rest  = parts.slice(1).join(' – ');
 
       return `
         <li class="list__row">
@@ -424,7 +466,7 @@ function initCaregiver(){
     if(end)parts.push(`end ${end}`);
     if(notes)parts.push(notes);
 
-    const line=`${left} — ${parts.join(' · ')}`.trim();
+    const line=`${left} – ${parts.join(' · ')}`.trim();
     const cur=getTA(); cur.push(line); setTA(cur);
 
     $('#med-name').value=''; $('#med-strength').value=''; $('#med-directions').value='';
@@ -477,19 +519,19 @@ function initPatient(){
   if (!$('#patient-name') || !$('#med-list')) return;
 
   const me=findUserById(get(K.currentUserId));
-  if (!me || me.role!=='patient'){ try{ location.href='patient-login.html'; return; }catch{} }
+  if (!me || me.role!=='patient'){ try{ location.href='404.html'; return; }catch{} }
   set(K.currentPatientId, me.id);
 
   $('#patient-name').textContent = me.fullName;
   $('#patient-initials').textContent = me.fullName.split(/\s+/).slice(0,2).map(s=>s[0]?.toUpperCase()||'').join('');
-  $('#patient-meta').textContent = `MRN: ${me.mrn||'—'} · DOB: ${me.dob||'—'} · Blood Type: ${me.blood||'—'}`;
+  $('#patient-meta').textContent = `MRN: ${me.mrn||'–'} · DOB: ${me.dob||'–'} · Blood Type: ${me.blood||'–'}`;
   $('#patient-alerts').innerHTML = me.allergies ? `<span class="pill pill--alert">Allergy: ${escapeHTML(me.allergies)}</span>` : '';
 
   const ul=$('#med-list');
   ul.innerHTML=(me.meds||[]).map(m=>{
-    const parts = (m || '').split(' — ');
+    const parts = (m || '').split(' – ');
     const name  = parts[0] || '';
-    const rest  = parts.slice(1).join(' — ');
+    const rest  = parts.slice(1).join(' – ');
 
     return `<li class="list__row">
       <div>
@@ -548,6 +590,7 @@ function escapeHTML(s){ return (s||'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':
 
 document.addEventListener('DOMContentLoaded', ()=>{
   seedDemo();
+  checkAuth(); // Check authentication on page load
   initGlobal();
   initAdminLogin();
   initCaregiverLogin();
