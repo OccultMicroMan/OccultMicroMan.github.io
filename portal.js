@@ -163,7 +163,7 @@ function initGlobal(){
 }
 
 /* ===========================
-   Hardened login helpers
+   Hardened login helpers - MINIMAL VERSION
    =========================== */
 function readLoginFields(pref) {
   const user = ($(`#${pref}-user`)||$('#user')||$('#username'))?.value?.trim()||'';
@@ -171,46 +171,39 @@ function readLoginFields(pref) {
   const code = ($(`#${pref}-code`)||$('#code')||$('#access')||$('#otp'))?.value?.trim()||'';
   return {user, pass, code};
 }
+
+// ABSOLUTELY MINIMAL - only change text content, nothing else
 function setStatus(msg){
   const s=$('#login-status'); 
-  if (s){ 
-    if (msg) {
-      s.textContent = msg;
-      s.style.display = 'block';
-    } else {
-      s.textContent = '';
-      s.style.display = 'none';
-    }
+  if (s && msg){ 
+    s.textContent = msg;
   }
 }
 
 /* ---- Admin ---- */
 function initAdminLogin(){
   const form = $('#admin-login-form'); if (!form) return;
-  const go = (e)=>{
+  form.addEventListener('submit', (e)=>{
     e.preventDefault();
     const {user, pass, code} = readLoginFields('ad');
     const admin = loadUsers().find(x=> x.role==='admin' && (
       (user && pass && x.username===user && x.password===pass) || (code && x.accessCode===code)
     ));
     if (admin){
-      setStatus('');
       set(K.adminLogged,'1');
       location.href='admin.html';
       return;
     }
     setStatus('Invalid admin credentials or access code.');
-  };
-  form.addEventListener('submit', go);
+  });
 }
 
-/* ---- Caregiver (your page title/login file is login.html) ---- */
+/* ---- Caregiver ---- */
 function initCaregiverLogin(){
-  // Bind either #cg-login-form or a generic #login-form on login.html
   const form = $('#cg-login-form') || $('#login-form');
   if (!form) return;
 
-  const go = (e)=>{
+  form.addEventListener('submit', (e)=>{
     e.preventDefault();
     const {user, pass, code} = readLoginFields('cg');
 
@@ -219,22 +212,19 @@ function initCaregiverLogin(){
             || (code && caregivers.find(x=>x.accessCode===code));
 
     if (cg){
-      setStatus('');
       set(K.currentUserId, cg.id);
-      // keep last selected patient if any
       location.href='caregiver.html';
       return;
     }
     setStatus('Invalid caregiver credentials or access code.');
-  };
-  form.addEventListener('submit', go);
+  });
 }
 
 /* ---- Patient ---- */
 function initPatientLogin(){
   const form = $('#pt-login-form'); if (!form) return;
 
-  const go = (e)=>{
+  form.addEventListener('submit', (e)=>{
     e.preventDefault();
     const {user, pass, code} = readLoginFields('pt');
 
@@ -243,15 +233,13 @@ function initPatientLogin(){
                  || (code && pts.find(x=>x.accessCode===code));
 
     if (patient){
-      setStatus('');
       set(K.currentUserId, patient.id);
       set(K.currentPatientId, patient.id);
       location.href='patient.html';
       return;
     }
     setStatus('Invalid patient credentials or access code.');
-  };
-  form.addEventListener('submit', go);
+  });
 }
 
 /* ===========================
@@ -282,7 +270,6 @@ function initAdmin(){
   const list=$('#user-list');
   renderUserList(); renderRoleSummary();
 
-  // >>> YOUR REQUESTED SUBMIT HANDLER (added; replaces previous one) <<<
   form.addEventListener('submit',(e)=>{
     e.preventDefault();
     const role=$('#role').value, fullName=$('#fullName').value.trim(),
@@ -458,7 +445,6 @@ function initCaregiver(){
     alert('Saved.');
   });
 
-  // Floating chat (bottom-right)
   initFloatingChat({
     title:'Secure Messages',
     getPeerId:()=> get(K.currentPatientId),
@@ -466,7 +452,6 @@ function initCaregiver(){
     openByDefault:false
   });
 
-  // Bottom-left issue panel
   (function initIssueBox(){
     const panel=$('#issue-panel'), form=$('#issue-form'), input=$('#issue-input'), toggle=$('#issue-toggle');
     if (!panel || !form || !toggle) return;
@@ -537,7 +522,7 @@ function initFloatingChat({title, getPeerId, who, openByDefault}){
     const txt=(input.value||'').trim(); if(!txt) return;
     addMsg(getPeerId(), who, txt);
 
-    if (who==='caregiver'){ // caregiver messages -> admin ticket
+    if (who==='caregiver'){
       const cg=findUserById(get(K.currentUserId));
       const patient=findUserById(getPeerId());
       addAdminTicket({
@@ -562,15 +547,11 @@ function fmtWhen(iso){ const d=iso?new Date(iso):null; return d&&!Number.isNaN(d
 function escapeHTML(s){ return (s||'').replace(/[&<>"']/g,c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;' }[c])); }
 
 document.addEventListener('DOMContentLoaded', ()=>{
-  seedDemo();       // ensure demo users exist (never wipes)
+  seedDemo();
   initGlobal();
-
-  // Bind logins (robust to filename/ID variations)
   initAdminLogin();
   initCaregiverLogin();
   initPatientLogin();
-
-  // Pages
   initAdmin();
   initCaregiver();
   initPatient();
