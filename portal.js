@@ -174,11 +174,12 @@ function readLoginFields(pref) {
 function setStatus(msg){
   const s=$('#login-status'); 
   if (s){ 
-    s.textContent=msg||''; 
     if (msg) {
-      s.style.opacity = '1';
+      s.textContent = msg;
+      s.style.display = 'block';
     } else {
-      s.style.opacity = '0';
+      s.textContent = '';
+      s.style.display = 'none';
     }
   }
 }
