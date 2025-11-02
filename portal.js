@@ -506,6 +506,9 @@ const LoginPages = {
 
 const AdminPage = {
   init() {
+    const form = $('#user-form');
+    if (!form) return; // Not on admin page
+    
     if (storage.get(KEYS.adminLogged) !== '1') {
       window.location.href = '404.html';
       return;
@@ -651,6 +654,9 @@ const AdminPage = {
 
 const CaregiverPage = {
   init() {
+    const selector = $('#patient-select');
+    if (!selector) return; // Not on caregiver page
+    
     const currentUser = UserManager.findById(storage.get(KEYS.currentUser));
     if (!currentUser || currentUser.role !== 'caregiver') {
       window.location.href = '404.html';
@@ -931,6 +937,9 @@ const CaregiverPage = {
 
 const PatientPage = {
   init() {
+    const patientName = $('#patient-name');
+    if (!patientName) return; // Not on patient page
+    
     const currentUser = UserManager.findById(storage.get(KEYS.currentUser));
     if (!currentUser || currentUser.role !== 'patient') {
       window.location.href = '404.html';
@@ -1051,15 +1060,24 @@ document.addEventListener('DOMContentLoaded', () => {
   // Check authentication and page access
   Auth.checkPageAccess();
   
-  // Initialize global UI controls
+  // Initialize global UI controls (runs on all pages)
   GlobalUI.init();
   
-  // Initialize page-specific functionality
-  LoginPages.initAdminLogin();
-  LoginPages.initCaregiverLogin();
-  LoginPages.initPatientLogin();
+  // Get current page to determine which initialization to run
+  const path = window.location.pathname;
   
-  AdminPage.init();
-  CaregiverPage.init();
-  PatientPage.init();
+  // Initialize page-specific functionality based on current page
+  if (path.includes('admin-login.html')) {
+    LoginPages.initAdminLogin();
+  } else if (path.includes('caregiver-login.html')) {
+    LoginPages.initCaregiverLogin();
+  } else if (path.includes('patient-login.html')) {
+    LoginPages.initPatientLogin();
+  } else if (path.includes('admin.html')) {
+    AdminPage.init();
+  } else if (path.includes('caregiver.html')) {
+    CaregiverPage.init();
+  } else if (path.includes('patient.html')) {
+    PatientPage.init();
+  }
 });
