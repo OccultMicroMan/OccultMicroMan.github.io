@@ -149,28 +149,33 @@ function seedDemoData() {
 const Auth = {
   checkPageAccess() {
     const path = window.location.pathname;
-    const publicPages = ['index.html', 'caregiver-login.html', 'patient-login.html', 'admin-login.html', '404.html'];
+    const filename = path.split('/').pop() || 'index.html';
     
-    const isPublic = publicPages.some(page => path.endsWith(page)) || path === '/';
-    if (isPublic) return;
+    // Public pages that don't require auth
+    const publicPages = ['index.html', 'caregiver-login.html', 'patient-login.html', 'admin-login.html', '404.html', ''];
+    
+    // If no filename or it's a public page, allow access
+    if (!filename || publicPages.includes(filename) || filename === path) {
+      return;
+    }
 
     // Check admin access
-    if (path.includes('admin.html')) {
+    if (filename === 'admin.html') {
       if (storage.get(KEYS.adminLogged) !== '1') {
         window.location.href = '404.html';
       }
       return;
     }
 
-    // Check role-based access
+    // Check role-based access for other protected pages
     const userId = storage.get(KEYS.currentUser);
     const user = UserManager.findById(userId);
 
-    if (path.includes('caregiver.html') && (!user || user.role !== 'caregiver')) {
+    if (filename === 'caregiver.html' && (!user || user.role !== 'caregiver')) {
       window.location.href = '404.html';
     }
 
-    if (path.includes('patient.html') && (!user || user.role !== 'patient')) {
+    if (filename === 'patient.html' && (!user || user.role !== 'patient')) {
       window.location.href = '404.html';
     }
   },
