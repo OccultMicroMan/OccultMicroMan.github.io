@@ -31,12 +31,17 @@ const storage = {
   remove: key => localStorage.removeItem(key),
   getJSON: key => {
     try {
-      return JSON.parse(localStorage.getItem(key) || '[]');
+      const data = localStorage.getItem(key);
+      console.log(`Getting ${key}:`, data);
+      return JSON.parse(data || '[]');
     } catch {
       return [];
     }
   },
-  setJSON: (key, data) => localStorage.setItem(key, JSON.stringify(data))
+  setJSON: (key, data) => {
+    console.log(`Setting ${key}:`, data);
+    localStorage.setItem(key, JSON.stringify(data));
+  }
 };
 
 // ============================================================================
@@ -286,22 +291,29 @@ const IssueSystem = {
 
 const TicketSystem = {
   getAll() {
-    return storage.getJSON(KEYS.adminTickets);
+    const tickets = storage.getJSON(KEYS.adminTickets);
+    console.log('TicketSystem.getAll() returned:', tickets);
+    return tickets;
   },
 
   save(tickets) {
+    console.log('TicketSystem.save() saving:', tickets);
     storage.setJSON(KEYS.adminTickets, tickets);
   },
 
   add(ticketData) {
+    console.log('TicketSystem.add() called with:', ticketData);
     const tickets = this.getAll();
-    tickets.push({
+    const newTicket = {
       id: 't_' + Math.random().toString(36).substr(2, 9),
       ...ticketData,
       timestamp: new Date().toISOString(),
       resolved: false
-    });
+    };
+    console.log('Creating new ticket:', newTicket);
+    tickets.push(newTicket);
     this.save(tickets);
+    console.log('Ticket saved. Total tickets now:', tickets.length);
   },
 
   toggleResolved(ticketId) {
@@ -320,9 +332,13 @@ const TicketSystem = {
 
   render() {
     const container = $('#adm-ticket-list');
-    if (!container) return;
+    if (!container) {
+      console.log('TicketSystem.render() - container #adm-ticket-list not found');
+      return;
+    }
 
     const tickets = this.getAll();
+    console.log('TicketSystem.render() rendering', tickets.length, 'tickets');
     
     if (tickets.length === 0) {
       container.innerHTML = '<div class="chat-empty">No tickets yet.</div>';
@@ -642,11 +658,18 @@ const AdminPage = {
     const toggle = $('#adm-ticket-toggle');
     const panel = $('#adm-ticket-panel');
     
-    if (!toggle || !panel) return;
+    if (!toggle || !panel) {
+      console.log('Ticket panel elements not found');
+      return;
+    }
+
+    console.log('Initializing ticket panel');
 
     toggle.addEventListener('click', () => {
+      console.log('Ticket toggle clicked');
       panel.classList.toggle('open');
       if (panel.classList.contains('open')) {
+        console.log('Panel opened, rendering tickets');
         TicketSystem.render();
       }
     });
@@ -925,6 +948,11 @@ const CaregiverPage = {
       const caregiver = UserManager.findById(storage.get(KEYS.currentUser));
       const patient = UserManager.findById(patientId);
       
+      console.log('Creating ticket from issue panel');
+      console.log('Caregiver:', caregiver);
+      console.log('Patient:', patient);
+      console.log('Text:', text);
+      
       TicketSystem.add({
         fromCaregiverId: caregiver?.id,
         fromCaregiverName: caregiver?.fullName || 'Caregiver',
@@ -935,6 +963,7 @@ const CaregiverPage = {
       
       input.value = '';
       refreshIssues();
+      alert('Issue reported to administrator.');
     });
   }
 };
@@ -1062,6 +1091,8 @@ function formatTimestamp(isoString) {
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('Application initializing...');
+  
   // Seed demo data if needed
   seedDemoData();
   
@@ -1073,19 +1104,28 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Get current page to determine which initialization to run
   const path = window.location.pathname;
+  console.log('Current path:', path);
   
   // Initialize page-specific functionality based on current page
   if (path.includes('admin-login.html')) {
+    console.log('Initializing admin login page');
     LoginPages.initAdminLogin();
   } else if (path.includes('caregiver-login.html')) {
+    console.log('Initializing caregiver login page');
     LoginPages.initCaregiverLogin();
   } else if (path.includes('patient-login.html')) {
+    console.log('Initializing patient login page');
     LoginPages.initPatientLogin();
   } else if (path.includes('admin.html')) {
+    console.log('Initializing admin page');
     AdminPage.init();
   } else if (path.includes('caregiver.html')) {
+    console.log('Initializing caregiver page');
     CaregiverPage.init();
   } else if (path.includes('patient.html')) {
+    console.log('Initializing patient page');
     PatientPage.init();
   }
+  
+  console.log('Application initialization complete');
 });
