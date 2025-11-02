@@ -859,6 +859,8 @@ const CaregiverPage = {
     const lastPatientId = storage.get(KEYS.currentPatient);
     if (lastPatientId) {
       patientSelect.value = lastPatientId;
+    } else if (patients[0]) {
+      patientSelect.value = patients[0].id;
     }
 
     const refreshChat = () => {
@@ -882,18 +884,6 @@ const CaregiverPage = {
       const patientId = patientSelect.value;
       Messaging.addMessage(patientId, 'caregiver', text);
       
-      // Also create admin ticket
-      const caregiver = UserManager.findById(storage.get(KEYS.currentUser));
-      const patient = UserManager.findById(patientId);
-      
-      TicketSystem.add({
-        fromCaregiverId: caregiver?.id,
-        fromCaregiverName: caregiver?.fullName || 'Caregiver',
-        patientId: patient?.id,
-        patientName: patient?.fullName || '',
-        text
-      });
-
       input.value = '';
       refreshChat();
     });
@@ -930,6 +920,19 @@ const CaregiverPage = {
 
       const patientId = storage.get(KEYS.currentPatient);
       IssueSystem.addIssue(patientId, 'caregiver', text);
+      
+      // Send ticket to admin
+      const caregiver = UserManager.findById(storage.get(KEYS.currentUser));
+      const patient = UserManager.findById(patientId);
+      
+      TicketSystem.add({
+        fromCaregiverId: caregiver?.id,
+        fromCaregiverName: caregiver?.fullName || 'Caregiver',
+        patientId: patient?.id,
+        patientName: patient?.fullName || '',
+        text: text
+      });
+      
       input.value = '';
       refreshIssues();
     });
