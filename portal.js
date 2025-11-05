@@ -1,6 +1,6 @@
 /**
  * MyHealth Portal - Complete JavaScript Application
- * Clean rewrite with all original features (password-only authentication)
+ * With strict role-based access control and inactivity timeout
  */
 
 // ============================================================================
@@ -15,6 +15,7 @@ const KEYS = {
   currentUser: 'mh_current_user',
   currentPatient: 'mh_current_patient',
   adminLogged: 'mh_admin_logged',
+  userRole: 'mh_user_role',
   messagesPrefix: 'mh_msgs_',
   issuesPrefix: 'mh_issues_',
   adminTickets: 'mh_admin_tickets'
@@ -148,6 +149,63 @@ function seedDemoData() {
 }
 
 // ============================================================================
+// INACTIVITY TIMEOUT
+// ============================================================================
+
+const InactivityTimer = {
+  timeout: 5 * 60 * 1000, // 5 minutes in milliseconds
+  timer: null,
+  
+  init() {
+    // Only initialize on protected pages (not login or home pages)
+    const path = window.location.pathname;
+    const filename = path.split('/').pop() || 'index.html';
+    const publicPages = ['index.html', 'caregiver-login.html', 'patient-login.html', 'admin-login.html', '404.html', ''];
+    
+    if (publicPages.includes(filename)) {
+      return; // Don't run timer on public pages
+    }
+
+    // Check if user is logged in
+    const userRole = storage.get(KEYS.userRole);
+    if (!userRole) {
+      return; // No user logged in, don't start timer
+    }
+
+    this.resetTimer();
+    this.attachEventListeners();
+  },
+
+  resetTimer() {
+    // Clear existing timer
+    if (this.timer) {
+      clearTimeout(this.timer);
+    }
+
+    // Set new timer
+    this.timer = setTimeout(() => {
+      this.logout();
+    }, this.timeout);
+  },
+
+  logout() {
+    alert('You have been logged out due to inactivity.');
+    Auth.logout();
+  },
+
+  attachEventListeners() {
+    // Listen for any user activity
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    
+    events.forEach(event => {
+      document.addEventListener(event, () => {
+        this.resetTimer();
+      }, true);
+    });
+  }
+};
+
+// ============================================================================
 // AUTHENTICATION
 // ============================================================================
 
@@ -164,23 +222,39 @@ const Auth = {
       return;
     }
 
+    // Get the user's authenticated role
+    const userRole = storage.get(KEYS.userRole);
+    
     // Check admin access
     if (filename === 'admin.html') {
-      if (storage.get(KEYS.adminLogged) !== '1') {
+      if (userRole !== 'admin' || storage.get(KEYS.adminLogged) !== '1') {
         window.location.href = '404.html';
       }
       return;
     }
 
-    // Check role-based access for other protected pages
-    const userId = storage.get(KEYS.currentUser);
-    const user = UserManager.findById(userId);
-
-    if (filename === 'caregiver.html' && (!user || user.role !== 'caregiver')) {
-      window.location.href = '404.html';
+    // Check caregiver access - ONLY allow caregiver.html
+    if (filename === 'caregiver.html') {
+      if (userRole !== 'caregiver') {
+        window.location.href = '404.html';
+      }
+      return;
     }
 
-    if (filename === 'patient.html' && (!user || user.role !== 'patient')) {
+    // Check patient access - ONLY allow patient.html
+    if (filename === 'patient.html') {
+      if (userRole !== 'patient') {
+        window.location.href = '404.html';
+      }
+      return;
+    }
+
+    // If user tries to access any other page that's not their role-specific page, redirect to 404
+    if (userRole === 'caregiver' && filename !== 'caregiver.html') {
+      window.location.href = '404.html';
+    } else if (userRole === 'patient' && filename !== 'patient.html') {
+      window.location.href = '404.html';
+    } else if (userRole === 'admin' && filename !== 'admin.html') {
       window.location.href = '404.html';
     }
   },
@@ -189,6 +263,7 @@ const Auth = {
     storage.remove(KEYS.currentUser);
     storage.remove(KEYS.currentPatient);
     storage.remove(KEYS.adminLogged);
+    storage.remove(KEYS.userRole);
     window.location.href = 'index.html';
   }
 };
@@ -456,6 +531,8 @@ const LoginPages = {
 
       if (admin) {
         storage.set(KEYS.adminLogged, '1');
+        storage.set(KEYS.currentUser, admin.id);
+        storage.set(KEYS.userRole, 'admin');
         window.location.href = 'admin.html';
       } else {
         this.showError('Invalid admin credentials.');
@@ -480,6 +557,7 @@ const LoginPages = {
 
       if (caregiver) {
         storage.set(KEYS.currentUser, caregiver.id);
+        storage.set(KEYS.userRole, 'caregiver');
         window.location.href = 'caregiver.html';
       } else {
         this.showError('Invalid caregiver credentials.');
@@ -505,6 +583,7 @@ const LoginPages = {
       if (patient) {
         storage.set(KEYS.currentUser, patient.id);
         storage.set(KEYS.currentPatient, patient.id);
+        storage.set(KEYS.userRole, 'patient');
         window.location.href = 'patient.html';
       } else {
         this.showError('Invalid patient credentials.');
@@ -530,7 +609,8 @@ const AdminPage = {
     const form = $('#user-form');
     if (!form) return; // Not on admin page
     
-    if (storage.get(KEYS.adminLogged) !== '1') {
+    const userRole = storage.get(KEYS.userRole);
+    if (userRole !== 'admin' || storage.get(KEYS.adminLogged) !== '1') {
       window.location.href = '404.html';
       return;
     }
@@ -685,8 +765,9 @@ const CaregiverPage = {
     const selector = $('#patient-select');
     if (!selector) return; // Not on caregiver page
     
+    const userRole = storage.get(KEYS.userRole);
     const currentUser = UserManager.findById(storage.get(KEYS.currentUser));
-    if (!currentUser || currentUser.role !== 'caregiver') {
+    if (userRole !== 'caregiver' || !currentUser || currentUser.role !== 'caregiver') {
       window.location.href = '404.html';
       return;
     }
@@ -977,8 +1058,9 @@ const PatientPage = {
     const patientName = $('#patient-name');
     if (!patientName) return; // Not on patient page
     
+    const userRole = storage.get(KEYS.userRole);
     const currentUser = UserManager.findById(storage.get(KEYS.currentUser));
-    if (!currentUser || currentUser.role !== 'patient') {
+    if (userRole !== 'patient' || !currentUser || currentUser.role !== 'patient') {
       window.location.href = '404.html';
       return;
     }
@@ -1101,6 +1183,9 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Initialize global UI controls (runs on all pages)
   GlobalUI.init();
+  
+  // Initialize inactivity timer
+  InactivityTimer.init();
   
   // Get current page to determine which initialization to run
   const path = window.location.pathname;
