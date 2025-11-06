@@ -212,18 +212,28 @@ const InactivityTimer = {
 const Auth = {
   checkPageAccess() {
     const path = window.location.pathname;
+    // Extract just the filename, handling both root and subdirectory paths
     const filename = path.split('/').pop() || 'index.html';
+    
+    // Also check if path ends with .html to handle edge cases
+    const isHtmlFile = filename.includes('.html');
     
     // Public pages that don't require auth
     const publicPages = ['index.html', 'caregiver-login.html', 'patient-login.html', 'admin-login.html', '404.html', ''];
     
-    // If no filename or it's a public page, allow access
-    if (!filename || publicPages.includes(filename) || filename === path) {
+    // If it's the root or a public page, allow access
+    if (!isHtmlFile || publicPages.includes(filename) || filename === '' || path === '/') {
       return;
     }
 
     // Get the user's authenticated role
     const userRole = storage.get(KEYS.userRole);
+    
+    // If no role is set and user is trying to access protected page, redirect to 404
+    if (!userRole && isHtmlFile && !publicPages.includes(filename)) {
+      window.location.href = '404.html';
+      return;
+    }
     
     // Check admin access
     if (filename === 'admin.html') {
@@ -249,13 +259,15 @@ const Auth = {
       return;
     }
 
-    // If user tries to access any other page that's not their role-specific page, redirect to 404
-    if (userRole === 'caregiver' && filename !== 'caregiver.html') {
-      window.location.href = '404.html';
-    } else if (userRole === 'patient' && filename !== 'patient.html') {
-      window.location.href = '404.html';
-    } else if (userRole === 'admin' && filename !== 'admin.html') {
-      window.location.href = '404.html';
+    // If user tries to access any other protected page, redirect to 404
+    if (userRole && isHtmlFile && !publicPages.includes(filename)) {
+      if (userRole === 'caregiver' && filename !== 'caregiver.html') {
+        window.location.href = '404.html';
+      } else if (userRole === 'patient' && filename !== 'patient.html') {
+        window.location.href = '404.html';
+      } else if (userRole === 'admin' && filename !== 'admin.html') {
+        window.location.href = '404.html';
+      }
     }
   },
 
@@ -1180,6 +1192,11 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Check authentication and page access
   Auth.checkPageAccess();
+  
+  // Mark body as loaded for protected pages (prevents flash)
+  if (document.body.dataset.page) {
+    document.body.classList.add('js-loaded');
+  }
   
   // Initialize global UI controls (runs on all pages)
   GlobalUI.init();

@@ -31,6 +31,21 @@ body{
   font-size:var(--base-font);
 }
 
+/* ============================================================================
+   PREVENT FLASH OF CONTENT BEFORE JS LOADS ON PROTECTED PAGES
+   ============================================================================ */
+body[data-page="patient"],
+body[data-page="caregiver"],
+body[data-page="admin"] {
+  visibility: hidden;
+}
+
+body[data-page="patient"].js-loaded,
+body[data-page="caregiver"].js-loaded,
+body[data-page="admin"].js-loaded {
+  visibility: visible;
+}
+
 h1,h2,h3,
 .brand__text,
 .sidenav__item,
